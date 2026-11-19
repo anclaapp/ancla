@@ -101,6 +101,30 @@ video.cam{width:100%;border-radius:14px;background:#000;max-height:50vh}
 .easybtns{display:flex;flex-direction:column;gap:14px}
 .err{color:var(--danger);font-weight:600;font-size:.9rem}
 .empty{text-align:center;padding:26px 12px;display:flex;flex-direction:column;gap:12px;align-items:center}
+
+.camscreen{position:fixed;inset:0;z-index:4;background:#0B0722;color:#fff;overflow:hidden}
+.hcam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0B0722}
+.camfb{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:linear-gradient(160deg,#1B1446,#6C3BE0)}
+.camfb[hidden]{display:none}
+.camshade{position:absolute;left:0;right:0;z-index:2;pointer-events:none}
+.camshade.top{top:0;height:160px;background:linear-gradient(rgba(11,7,34,.7),transparent)}
+.camshade.bot{bottom:0;height:240px;background:linear-gradient(transparent,rgba(11,7,34,.75))}
+.camtop{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))}
+.cbrand{font-family:var(--display);font-weight:700;font-size:1.5rem}
+.camhint{font-size:.82rem;font-weight:700;background:rgba(11,7,34,.55);padding:6px 12px;border-radius:999px}
+.camdue{font-size:.85rem;font-weight:800;background:var(--yellow);color:var(--on-yellow);border:0;padding:8px 14px;border-radius:999px;min-height:40px}
+.camside{position:absolute;z-index:3;right:max(10px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-46%);display:flex;flex-direction:column;gap:14px;align-items:center}
+.cbtn{background:none;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:56px;padding:0}
+.cbtn .cc{width:52px;height:52px;border-radius:50%;background:rgba(11,7,34,.5);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.35)}
+.cbtn.sm .cc{width:44px;height:44px}
+.cbtn .cl{font-size:.7rem;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.camside .cbtn:first-child .cc{background:var(--yellow);color:var(--on-yellow);border-color:#fff;width:60px;height:60px}
+.cambot{position:absolute;z-index:3;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,env(safe-area-inset-right,0px)) calc(26px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+.gal{width:52px;height:52px;border-radius:12px;border:2px solid #fff;background:rgba(11,7,34,.5);color:#fff;overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center}
+.gal img{width:100%;height:100%;object-fit:cover}
+.shutter{width:84px;height:84px;border-radius:50%;border:5px solid #fff;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
+.shutter span{width:62px;height:62px;border-radius:50%;background:var(--yellow);display:block}
+.shutter:active span{transform:scale(.9)}
 </style></head><body><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
 (() => {
 'use strict';
@@ -125,6 +149,7 @@ const IC = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  flip: '<path d="M4 8h12l-3-3M20 16H8l3 3"/>',
   img: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 18l5-5 4 4 2-2 3 3"/>'
 };
 const ic = (n, s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
@@ -151,6 +176,8 @@ async function dbDel(st, id) { if (!MEM) { try { await tx(st, 'readwrite', s => 
 /* ---------- estado ---------- */
 const S = { view: 'home', tab: 'home', threadId: null, memos: [], threads: [], easy: false, sheet: null, modal: null, q: '', pos: null, dismissed: {}, listening: false };
 try { S.easy = localStorage.getItem('ancla.easy') === '1'; } catch (e) {}
+S.camfirst = true; try { S.camfirst = localStorage.getItem('ancla.camfirst') !== '0'; } catch (e) {}
+S.tab = S.camfirst ? 'cam' : 'home'; S.facing = 'environment';
 const thr = id => S.threads.find(t => t.id === id);
 const memosOf = id => S.memos.filter(m => m.threadId === id).sort((a, b) => b.ts - a.ts);
 const lastActivity = t => Math.max(t.created || 0, ...memosOf(t.id).map(m => m.ts), ...(t.decisions || []).map(d => d.ts));
@@ -174,10 +201,11 @@ function setHash(h) { try { if (h) { if (location.hash !== '#' + h) location.has
 /* ---------- vistas ---------- */
 function nav() {
   const item = (k, i, l) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? 'on' : ''}" aria-current="${S.tab === k ? 'page' : 'false'}">${ic(i)}<span>${l}</span></button>`;
-  return `<nav class="nav" aria-label="Principal"><div class="nav-in">${item('home', 'home', 'Inicio')}${item('time', 'clock', 'Cronología')}${item('search', 'search', 'Buscar')}${item('more', 'more', 'Más')}</div></nav>`;
+  return `<nav class="nav" aria-label="Principal"><div class="nav-in">${item('cam', 'cam', 'Cámara')}${item('home', 'home', 'Hilos')}${item('time', 'clock', 'Cronología')}${item('search', 'search', 'Buscar')}${item('more', 'more', 'Más')}</div></nav>`;
 }
 function view() {
   let h;
+  if (S.view === 'home' && S.tab === 'cam') return camView();
   if (S.view === 'thread') h = threadView();
   else if (S.tab === 'time') h = timeView();
   else if (S.tab === 'search') h = searchView();
@@ -185,6 +213,31 @@ function view() {
   else if (S.view === 'inbox') h = inboxView();
   else h = homeView();
   return h + nav();
+}
+let homeStream = null, homeFacing = null, homeBusy = false;
+function stopHome() { if (homeStream) { homeStream.getTracks().forEach(t => t.stop()); homeStream = null; } }
+async function syncHome() {
+  const want = S.tab === 'cam' && S.view === 'home' && !S.sheet && !S.modal && !document.hidden;
+  if (!want) { stopHome(); return; }
+  const v = $('#hcam'); if (!v || !S.canCam) return;
+  if (homeStream && homeFacing === S.facing) { if (v.srcObject !== homeStream) { v.srcObject = homeStream; v.play().catch(() => {}); } return; }
+  if (homeBusy) return; homeBusy = true; stopHome();
+  try {
+    homeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: S.facing } }, audio: false }); homeFacing = S.facing; S.camDenied = false;
+    const v2 = $('#hcam'); if (v2) { v2.srcObject = homeStream; v2.play().catch(() => {}); } const fb = $('#camfb'); if (fb) fb.hidden = true;
+  } catch (e) { S.camDenied = true; const fb = $('#camfb'); if (fb) fb.hidden = false; }
+  homeBusy = false;
+}
+function camView() {
+  const inbox = S.memos.filter(isInbox).length, last = S.memos.find(m => m.photoUrl);
+  const due = S.threads.find(t => t.remind && !t.remind.done && t.state !== 'cerrado' && !S.dismissed[t.id] && ((t.remind.type === 'date' && t.remind.at <= Date.now()) || (t.remind.type === 'place' && S.pos && dist(S.pos, t.remind) <= t.remind.r)));
+  const cb = (act, icn, label, extra) => `<button class="cbtn" data-act="${act}" ${extra || ''}><span class="cc">${ic(icn, 26)}</span><span class="cl">${label}</span></button>`;
+  return `<div class="camscreen"><video id="hcam" class="hcam" autoplay playsinline muted></video>
+  <div class="camfb" id="camfb" ${S.canCam && !S.camDenied ? 'hidden' : ''}><h2>Tu cámara</h2><p>${S.canCam ? 'Permite la cámara para verla aquí.' : 'Aquí la cámara en vivo no está disponible.'}</p><label class="btn yellow" style="cursor:pointer">${ic('cam')} Tomar foto con el teléfono<input type="file" accept="image/*" capture="environment" hidden data-file="homephoto"></label></div>
+  <div class="camshade top"></div><div class="camshade bot"></div>
+  <div class="camtop"><span class="cbrand">ancla</span>${due ? `<button class="camdue" data-act="open-thread" data-id="${due.id}">Recordatorio: ${esc(due.name)}</button>` : `<span class="camhint">Círculo: foto · Micrófono: voz</span>`}<button class="cbtn sm" data-act="cam-flip" aria-label="Girar cámara"><span class="cc">${ic('flip', 22)}</span></button></div>
+  <div class="camside">${cb('cam-voice', 'mic', 'Voz')}${cb('tab', 'home', 'Hilos', 'data-tab="home"')}${cb('tab', 'clock', 'Cronología', 'data-tab="time"')}${cb('tab', 'search', 'Buscar', 'data-tab="search"')}${inbox ? cb('open-inbox', 'img', 'Sin motivo') : ''}${cb('tab', 'more', 'Más', 'data-tab="more"')}</div>
+  <div class="cambot"><button class="gal" data-act="tab" data-tab="time" aria-label="Abrir cronología">${last ? `<img src="${last.photoUrl}" alt="">` : ic('img', 22)}</button><button class="shutter" data-act="cam-shoot" aria-label="Tomar foto"><span></span></button><span style="width:52px"></span></div></div>`;
 }
 function banners() {
   const out = [];
@@ -306,6 +359,7 @@ function snippet(text, toks) {
 }
 function moreView() {
   return `<div class="top"><div class="brand">Más</div></div>
+  <div class="card"><label class="sw"><span><b>Abrir directo en la cámara</b><br><span class="muted">Como una app de video: la cámara aparece al abrir.</span></span><input type="checkbox" data-act="camfirst" ${S.camfirst ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Modo fácil</b><br><span class="muted">Tres botones grandes y letra grande.</span></span><input type="checkbox" data-act="easy" ${S.easy ? 'checked' : ''}></label></div>
   <div class="card"><div class="eyebrow">Tus datos</div><p>Todo se guarda en este teléfono, en el navegador o la app instalada. Nada se envía a ningún servidor.</p>
   <p class="muted" id="storageinfo"></p><button class="btn alt" data-act="persist">Pedir que no se borre solo</button></div>
@@ -412,8 +466,8 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 S.canSpeech = !!SR;
 let camStream = null, recStream = null, mr = null, chunks = [], recT0 = 0, recTimer = null;
 function newDraft(over) { return Object.assign({ pins: [], text: '', threadId: '', private: false }, over || {}); }
-function openSheet(over, opts) { S.sheet = Object.assign({ d: newDraft(over), rec: false, cam: false, err: '' }, opts || {}); setHash('nuevo'); renderLayer(); if (S.sheet.autoCam) { S.sheet.autoCam = false; startCam(); } }
-function closeSheet() { stopCam(); if (mr && mr.state !== 'inactive') { try { mr.onstop = null; mr.stop(); } catch (e) {} } stopRecStream(); clearInterval(recTimer); const d = S.sheet && S.sheet.d; if (d) { if (d.photoUrl && !d.id) URL.revokeObjectURL(d.photoUrl); if (d.audioUrl && !d.id) URL.revokeObjectURL(d.audioUrl); } S.sheet = null; setHash(''); renderLayer(); }
+function openSheet(over, opts) { stopHome(); S.sheet = Object.assign({ d: newDraft(over), rec: false, cam: false, err: '' }, opts || {}); setHash('nuevo'); renderLayer(); if (S.sheet.autoCam) { S.sheet.autoCam = false; startCam(); } if (S.sheet.autoRec) { S.sheet.autoRec = false; startRec(); } }
+function closeSheet() { stopCam(); if (mr && mr.state !== 'inactive') { try { mr.onstop = null; mr.stop(); } catch (e) {} } stopRecStream(); clearInterval(recTimer); const d = S.sheet && S.sheet.d; if (d) { if (d.photoUrl && !d.id) URL.revokeObjectURL(d.photoUrl); if (d.audioUrl && !d.id) URL.revokeObjectURL(d.audioUrl); } S.sheet = null; setHash(''); renderLayer(); if (S.tab === 'cam' && S.view === 'home') render(); }
 async function startCam() {
   try { camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }); S.sheet.cam = true; S.sheet.err = ''; renderLayer(); }
   catch (e) { S.sheet.err = 'No pude abrir la cámara aquí. Usa «Cámara del teléfono» o «Elegir foto».'; S.sheet.cam = false; renderLayer(); }
@@ -538,6 +592,9 @@ document.addEventListener('click', async e => {
   if (a === 'open-inbox') { S.view = 'inbox'; return render(); }
   if (a === 'dismiss') { S.dismissed[id] = 1; const t = thr(id); if (t && t.remind && t.remind.type === 'date') { t.remind.done = true; await dbPut('threads', t); } return render(); }
   if (a === 'new') return openSheet({ threadId: el.dataset.thread || '' });
+  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(b => { openSheet({}); setPhoto(b); renderLayer(); }, 'image/jpeg', 0.88); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
+  if (a === 'cam-voice') return openSheet({}, { autoRec: true });
+  if (a === 'cam-flip') { S.facing = S.facing === 'environment' ? 'user' : 'environment'; return syncHome(); }
   if (a === 'new-photo') return openSheet({}, { autoCam: S.canCam });
   if (a === 'sheet-close') return closeSheet();
   if (a === 'modal-close') return closeModal();
@@ -592,12 +649,14 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', async e => {
   const t = e.target;
+  if (t.dataset.act === 'camfirst') { S.camfirst = t.checked; try { localStorage.setItem('ancla.camfirst', S.camfirst ? '1' : '0'); } catch (x) {} return; }
   if (t.dataset.act === 'easy') { S.easy = t.checked; try { localStorage.setItem('ancla.easy', S.easy ? '1' : '0'); } catch (x) {} return render(); }
   if (t.dataset.sum) { S.modal.o[t.dataset.sum] = t.checked; $('#sumprev').innerHTML = summaryHTML(thr(S.threadId), S.modal.o, false); return; }
   if (t.dataset.draft === 'private') { S.sheet.d.private = t.checked; return; }
   if (t.dataset.file) {
     const files = Array.from(t.files || []); t.value = ''; if (!files.length) return;
-    if (t.dataset.file === 'photo') { setPhoto(files[0]); renderLayer(); }
+    if (t.dataset.file === 'homephoto') { openSheet({}); setPhoto(files[0]); renderLayer(); }
+    else if (t.dataset.file === 'photo') { setPhoto(files[0]); renderLayer(); }
     else if (t.dataset.file === 'audio') setAudioFile(files[0]);
     else if (t.dataset.file === 'inbox') { let i = 0; for (const f of files) await dbPut('memos', { id: uid(), ts: Date.now() + i++, photo: f, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false }); await reload(); toast(files.length + ' en la bandeja.'); }
   }
@@ -626,13 +685,14 @@ document.addEventListener('loadedmetadata', e => {
   a.currentTime = 1e101; a.addEventListener('timeupdate', function f() { a.removeEventListener('timeupdate', f); a.currentTime = 0; });
 }, true);
 window.addEventListener('hashchange', () => { if (!location.hash) { if (S.sheet) closeSheet(); else if (S.modal) closeModal(); else if (S.view !== 'home') { S.view = 'home'; render(); } } });
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkPlace(); if (!S.sheet && !S.modal) render(); } });
+document.addEventListener('visibilitychange', () => { syncHome(); if (!document.hidden) { checkPlace(); if (!S.sheet && !S.modal) render(); } });
 
 function render() {
   document.documentElement.classList.toggle('easy', S.easy);
   $('#app').innerHTML = view();
   if (S.tab === 'more') { try { navigator.storage.estimate().then(e => { const el = $('#storageinfo'); if (el) el.textContent = 'Usado: ' + (e.usage / 1048576).toFixed(1) + ' MB de ' + Math.round(e.quota / 1048576) + ' MB disponibles.'; }); } catch (x) {} }
   renderLayer();
+  syncHome();
 }
 (async () => {
   try { await load(); } catch (e) { MEM = true; }

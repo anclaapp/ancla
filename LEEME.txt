@@ -1,20 +1,20 @@
 ANCLA - app web instalable (PWA) para Android, lista para iPhone
 =================================================================
 Como ponerla en tu telefono
-1. Sube esta carpeta COMPLETA a cualquier hosting con HTTPS (GitHub Pages, Netlify, Cloudflare Pages o Firebase Hosting; los cuatro tienen plan gratis).
+1. Sube los archivos de esta carpeta (sin la carpeta misma) a un hosting con HTTPS: GitHub Pages, Netlify, Cloudflare Pages o Firebase Hosting (todos con plan gratis).
 2. Abre la direccion en Chrome para Android. Menu (tres puntos) > "Instalar app" o "Agregar a la pantalla principal".
-3. Al instalarla, Ancla aparece en el boton Compartir de la galeria y de las capturas de Android (Compartir > Ancla).
-4. Primera vez: acepta los permisos de microfono y camara cuando Ancla los pida.
+3. Al instalarla, Ancla aparece en el boton Compartir de la galeria y de las capturas de Android.
+4. Primera vez: acepta los permisos de camara y microfono.
 
 Que hace
-- Foto con la camara de Ancla o desde el album, nota de voz sin limite de tiempo, pines de voz sobre la foto.
+- Abre directo en la camara, con iconos propios (voz, hilos, cronologia, buscar, mas). Se puede desactivar en Mas.
+- Foto con la camara de Ancla o del album, nota de voz sin limite de tiempo, pines de voz sobre la foto.
 - Hilos con linea de tiempo, decisiones, "Donde quede?", cierre con aprendizajes.
 - Bandeja "Sin motivo", cronologia, busqueda escrita o hablada, resumen descargable, modo facil.
 - Recordatorio por fecha o por lugar (se muestra al abrir Ancla).
-- Todo se guarda en el telefono (IndexedDB). Funciona sin internet.
+- Todo se guarda en el telefono. Funciona sin internet.
 
-Lo que NO incluye todavia (necesita servidor)
-- Sincronizacion en la nube, invitar por enlace, notificaciones con la app cerrada, suscripcion Plus.
-- Transcripcion automatica de los audios (se puede dictar en la nota escrita).
+Todavia no incluye (necesita servidor)
+- Nube, invitar por enlace, notificaciones con la app cerrada, suscripcion Plus, transcripcion automatica de audios.
 
-iPhone: en Safari, Compartir > "Agregar a inicio". Safari no permite recibir fotos por Compartir en apps web; para eso hace falta la version nativa (siguiente etapa del plan).
+Si ya habias instalado una version anterior: abre Ancla con internet una vez y cierrala por completo para que se actualice.
