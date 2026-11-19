@@ -568,7 +568,7 @@ function snippet(text, toks) {
 function moreView() {
   return `<div class="top"><div class="brand">Más</div></div>
   <div class="card"><label class="sw"><span><b>Abrir directo en la cámara</b><br><span class="muted">Como una app de video: la cámara aparece al abrir.</span></span><input type="checkbox" data-act="camfirst" ${S.camfirst ? 'checked' : ''}></label></div>
-  ${canAuto ? `<div class="card"><label class="sw"><span><b>Guardar copia de cada foto en el teléfono</b><br><span class="muted">Se guarda en la carpeta Descargas y aparece en tu galería del teléfono. Chrome puede pedirte permiso la primera vez. Una carpeta propia de Ancla en Fotos requiere la versión nativa.</span></span><input type="checkbox" data-act="autocopy" ${S.autoCopy ? 'checked' : ''}></label></div>` : ''}
+  ${canAuto ? `<div class="card"><label class="sw"><span><b>Guardar copia de cada foto en el teléfono</b><br><span class="muted">Se guarda en Descargas y aparece en tu galería del teléfono (en iPhone usa el botón Guardar de cada foto). Chrome puede pedirte permiso la primera vez. Una carpeta propia de Ancla en Fotos requiere la versión nativa.</span></span><input type="checkbox" data-act="autocopy" ${S.autoCopy ? 'checked' : ''}></label></div>` : ''}
   <div class="card"><label class="sw"><span><b>Cámara en vivo de fondo</b><br><span class="muted">Las demás pantallas se ven sobre la cámara. Gasta más batería y el teléfono muestra que la cámara está en uso. Apagado: se ve tu última foto.</span></span><input type="checkbox" data-act="livebg" ${S.liveBg ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Modo fácil</b><br><span class="muted">Tres botones grandes y letra grande.</span></span><input type="checkbox" data-act="easy" ${S.easy ? 'checked' : ''}></label></div>
   <div class="card"><div class="eyebrow">Tus datos</div><p>Todo se guarda en este teléfono, en el navegador o la app instalada. Nada se envía a ningún servidor.</p>
@@ -617,7 +617,7 @@ function viewerHTML() {
   ${i > 0 ? `<button class="vnav l" data-act="vprev" aria-label="Foto más reciente">${ic('back', 26)}</button>` : ''}${i < list.length - 1 ? `<button class="vnav r" data-act="vnext" aria-label="Foto anterior">${ic('chev', 26)}</button>` : ''}
   <div class="vtop"><button class="cbtn sm" data-act="viewer-close" aria-label="Cerrar"><span class="cc">${ic('close', 22)}</span></button><div class="vtitle"><b>${esc(dayLabel(m.ts))}</b><span>${fmtTime(m.ts)}${t ? ' · ' + esc(t.name) : ''}</span></div><span style="width:44px"></span></div>
   <div class="vbottom">${v.err ? `<p class="err">${esc(v.err)}</p>` : ''}${info}${panel}
-  <div class="vbar">${v.rec ? '' : tool('vpanel', 'pen', 'Nota', 'data-panel="note"')}${v.rec ? '' : tool('vpanel', 'tag', 'Hilo', 'data-panel="thread"')}<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>${v.rec ? '' : tool('vsave', 'download', 'Copia')}${v.rec ? '' : tool('vdel', 'trash', 'Borrar')}</div></div></div>`;
+  <div class="vbar">${v.rec ? '' : tool('vpanel', 'pen', 'Nota', 'data-panel="note"')}${v.rec ? '' : tool('vpanel', 'tag', 'Hilo', 'data-panel="thread"')}<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>${v.rec ? '' : tool('vsave', 'download', 'Guardar')}${v.rec ? '' : tool('vdel', 'trash', 'Borrar')}</div></div></div>`;
 }
 async function vRecStart() {
   const v = S.viewer, m0 = S.memos.find(x => x.id === v.id); v.err = '';
@@ -637,13 +637,33 @@ async function vRecStart() {
   } catch (e) { stopRecStream(); v.rec = false; v.err = 'No pude usar el micrófono aquí. Instala Ancla en tu teléfono y permite el micrófono.'; renderLayer(); }
 }
 /* copia de cada foto en el teléfono (carpeta Descargas, visible en la galería) */
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let expQ = [], expBusy = false;
+async function expRun() {
+  if (expBusy) return; expBusy = true;
+  while (expQ.length) {
+    const it = expQ.shift();
+    try { const url = URL.createObjectURL(it.blob), a = document.createElement('a'); a.href = url; a.download = it.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); } catch (e) {}
+    await new Promise(r => setTimeout(r, 900)); /* en fila y con pausa: Chrome tolera mejor las descargas seguidas */
+  }
+  expBusy = false;
+}
+function firstCopyNote() {
+  try { if (localStorage.getItem('ancla.copynote')) return; localStorage.setItem('ancla.copynote', '1'); } catch (e) {}
+  toast(isIOS ? 'En iPhone, abre la foto y toca Guardar para ponerla en Fotos.' : 'Copia guardada en Descargas; la verás en la galería del teléfono. Si Chrome pregunta, toca Permitir.');
+}
 function exportToDevice(blob, ts) {
   if (!canAuto || !S.autoCopy) return;
+  if (isIOS) { firstCopyNote(); return; } /* Safari no permite descargas automáticas: se usa el botón Guardar */
+  expQ.push({ blob, name: photoName(ts) }); expRun(); firstCopyNote();
+}
+async function shareToPhotos(m) {
+  /* abre el menú del sistema (en iPhone y Android incluye «Guardar imagen» / Fotos) */
   try {
-    const d = new Date(ts), p2 = n => String(n).padStart(2, '0');
-    const name = `Ancla_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}.jpg`;
-    const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-  } catch (e) {}
+    const f = new File([m.photo], photoName(m.ts), { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Foto de Ancla' }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  await saveFile(photoName(m.ts), m.photo, 'image/jpeg');
 }
 function photoName(ts) { const d = new Date(ts), p2 = n => String(n).padStart(2, '0'); return `Ancla_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}.jpg`; }
 function updateThumb(m) {
@@ -884,7 +904,7 @@ document.addEventListener('click', async e => {
   if (a === 'vdictate') return dictate(t => { const ta = $('#v-note'); if (ta) ta.value = (ta.value ? ta.value + ' ' : '') + t; });
   if (a === 'vthread') { const m = S.memos.find(x => x.id === S.viewer.id); m.threadId = id || null; await persistMemo(m); S.viewer.panel = null; renderLayer(); return toast(id ? 'Añadida al hilo.' : 'Sin hilo.'); }
   if (a === 'vthread-new') { const name = (($('#v-new') || {}).value || '').trim(); if (!name) return toast('Escribe el nombre del hilo.'); const t = { id: uid(), name, state: 'explorando', created: Date.now(), decisions: [] }; await dbPut('threads', t); S.threads.push(t); const m = S.memos.find(x => x.id === S.viewer.id); m.threadId = t.id; await persistMemo(m); S.viewer.panel = null; renderLayer(); return toast('Hilo creado.'); }
-  if (a === 'vsave') { const m = S.memos.find(x => x.id === S.viewer.id); await saveFile(photoName(m.ts), m.photo, 'image/jpeg'); return; }
+  if (a === 'vsave') { const m = S.memos.find(x => x.id === S.viewer.id); await shareToPhotos(m); return; }
   if (a === 'vdel') {
     if (!el.dataset.armed) { const lab = el.querySelector('.cl'); el.dataset.armed = '1'; lab.textContent = '¿Seguro?'; setTimeout(() => { el.dataset.armed = ''; lab.textContent = 'Borrar'; }, 4000); return; }
     const v = S.viewer, list = viewerList(), i = list.findIndex(x => x.id === v.id), nxt = list[i + 1] || list[i - 1]; await dbDel('memos', v.id);

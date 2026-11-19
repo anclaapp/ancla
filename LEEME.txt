@@ -25,3 +25,8 @@ NOVEDAD: FOTO RAPIDA Y GALERIA
 - Pestana "Galeria": todas las fotos, con o sin voz, por dia, de la mas nueva a la mas vieja. Es tu copia dentro de Ancla.
 - Copia en el telefono: cada foto tambien se descarga como Ancla_AAAAMMDD_HHMMSS.jpg (carpeta Descargas). Se puede apagar en "Mas". Chrome puede pedirte permiso para descargas multiples: acepta.
 - Una carpeta propia "Ancla" dentro de Fotos solo es posible con la app nativa (Flutter), planeada despues.
+
+MEJORAS DE GUARDADO
+- Boton "Guardar" en cada foto: abre el menu del telefono para guardarla en Fotos (en iPhone es la forma de tenerla en Fotos).
+- Las copias automaticas se hacen en fila, con una pausa entre cada una, para que Chrome no las bloquee.
+- La primera vez, Ancla te avisa donde quedo tu copia.
