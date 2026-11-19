@@ -13,7 +13,7 @@
 *{box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%}
 html.easy{font-size:20px}
-body{margin:0;background:radial-gradient(120% 60% at 50% -10%,#2A1670 0%,var(--bg) 60%) fixed,var(--bg);color:var(--ink);font-family:var(--body);line-height:1.45;
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   padding-block:16px 0;min-height:100%}
 button,input,textarea,select{font:inherit;color:inherit}
@@ -191,7 +191,42 @@ option{color:#1B1446}
 .top .brand,.top h1{color:#fff}
 .brand{color:#fff}
 .nav-in{align-items:center}
-</style></head><body><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
+
+/* fondo vivo: la última foto o la cámara detrás de todas las pantallas */
+#bg{position:fixed;inset:0;z-index:0;background:linear-gradient(160deg,#2A1670,#0B0722 70%);overflow:hidden}
+#bg.hide{display:none}
+#bg img,#bg video{position:absolute;inset:-30px;width:calc(100% + 60px);height:calc(100% + 60px);object-fit:cover;filter:blur(26px) saturate(1.25);transform:scale(1.05)}
+#bg video{filter:blur(22px) saturate(1.2)}
+#bg [hidden]{display:none}
+.bgshade{position:absolute;inset:0;background:linear-gradient(rgba(11,7,34,.55),rgba(11,7,34,.82))}
+#app{position:relative;z-index:1}
+.card{background:rgba(11,7,34,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.tile{background:rgba(11,7,34,.5)}
+.feed{background:transparent}
+.fcard,.fhead{background:none}
+.fcard.nophoto{background:none}
+.fcard.nophoto.g0,.fcard.nophoto.g1,.fcard.nophoto.g2,.fcard.nophoto.g3{background-blend-mode:normal}
+.camtop .ctools{display:flex;gap:8px;align-items:center;margin-left:auto}
+.camdue{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc{position:relative}
+.cdot{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--yellow);color:var(--on-yellow);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #0B0722}
+.cdot.sm{min-width:18px;height:18px;font-size:.68rem}
+.cmenu-bg{position:absolute;inset:0;z-index:4}
+.cmenu{position:absolute;z-index:5;right:max(14px,env(safe-area-inset-right,0px));top:calc(70px + env(safe-area-inset-top,0px));width:210px;background:rgba(11,7,34,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:6px;display:flex;flex-direction:column;animation:rise .2s ease both}
+.cmenu button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;background:none;border:0;color:#fff;font-weight:700;border-radius:12px;text-align:left;position:relative}
+.cmenu button:active{background:rgba(255,255,255,.1)}
+.cmenu .cdot{position:static;margin-left:auto}
+.recchip{display:inline-flex;align-items:center;gap:8px;background:rgba(11,7,34,.7);padding:7px 14px;border-radius:999px;font-weight:700;font-size:.9rem}
+.recchip i{width:10px;height:10px;border-radius:50%;background:#FF4D6A;animation:pulse2 1s ease-in-out infinite}
+.recchip b{font-variant-numeric:tabular-nums}
+@keyframes pulse2{50%{opacity:.25}}
+.voicebtn.live .cc{background:var(--brand);border-color:#fff;animation:pulse 1.4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.voicebtn.live .cc,.recchip i{animation:none}}
+/* hoja de captura sobre la foto que acabas de tomar */
+.layer.full{overflow:hidden}
+.layer.full::before{content:"";position:absolute;inset:0;background:var(--sbg,linear-gradient(160deg,#2A1670,#0B0722)) center/cover;filter:blur(30px) brightness(.55) saturate(1.2);transform:scale(1.2)}
+.sheet{background:rgba(18,12,56,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:relative}
+</style></head><body><div id="bg" aria-hidden="true"><img id="bgimg" alt="" hidden><video id="bgvid" autoplay playsinline muted hidden></video><div class="bgshade"></div></div><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
 (() => {
 'use strict';
 /* ---------- utilidades ---------- */
@@ -219,6 +254,7 @@ const IC = {
   pause: '<path d="M8 5v14M16 5v14" stroke-width="3.5"/>',
   pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
   flip: '<path d="M4 8h12l-3-3M20 16H8l3 3"/>',
   img: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 18l5-5 4 4 2-2 3 3"/>'
 };
@@ -247,7 +283,8 @@ async function dbDel(st, id) { if (!MEM) { try { await tx(st, 'readwrite', s => 
 const S = { view: 'home', tab: 'home', threadId: null, memos: [], threads: [], easy: false, sheet: null, modal: null, q: '', pos: null, dismissed: {}, listening: false };
 try { S.easy = localStorage.getItem('ancla.easy') === '1'; } catch (e) {}
 S.camfirst = true; try { S.camfirst = localStorage.getItem('ancla.camfirst') !== '0'; } catch (e) {}
-S.tab = S.camfirst ? 'cam' : 'home'; S.facing = 'environment';
+S.tab = S.camfirst ? 'cam' : 'home'; S.facing = 'environment'; S.menu = false; S.camRec = null;
+S.liveBg = false; try { S.liveBg = localStorage.getItem('ancla.livebg') === '1'; } catch (e) {}
 const thr = id => S.threads.find(t => t.id === id);
 const memosOf = id => S.memos.filter(m => m.threadId === id).sort((a, b) => b.ts - a.ts);
 const lastActivity = t => Math.max(t.created || 0, ...memosOf(t.id).map(m => m.ts), ...(t.decisions || []).map(d => d.ts));
@@ -287,28 +324,54 @@ function view() {
 }
 let homeStream = null, homeFacing = null, homeBusy = false;
 function stopHome() { if (homeStream) { homeStream.getTracks().forEach(t => t.stop()); homeStream = null; } }
+function attachHome() { const v = $('#hcam'); if (v && homeStream && v.srcObject !== homeStream) { v.srcObject = homeStream; v.play().catch(() => {}); } updateBg(); }
 async function syncHome() {
-  const want = S.tab === 'cam' && S.view === 'home' && !S.sheet && !S.modal && !document.hidden;
-  if (!want) { stopHome(); return; }
-  const v = $('#hcam'); if (!v || !S.canCam) return;
-  if (homeStream && homeFacing === S.facing) { if (v.srcObject !== homeStream) { v.srcObject = homeStream; v.play().catch(() => {}); } return; }
+  const camScreen = S.tab === 'cam' && S.view === 'home';
+  const want = (camScreen || S.liveBg) && !S.sheet && !S.modal && !document.hidden && S.canCam;
+  if (!want) { stopHome(); updateBg(); return; }
+  if (homeStream && homeFacing === S.facing) { attachHome(); return; }
   if (homeBusy) return; homeBusy = true; stopHome();
   try {
     homeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: S.facing } }, audio: false }); homeFacing = S.facing; S.camDenied = false;
-    const v2 = $('#hcam'); if (v2) { v2.srcObject = homeStream; v2.play().catch(() => {}); } const fb = $('#camfb'); if (fb) fb.hidden = true;
+    attachHome(); const fb = $('#camfb'); if (fb) fb.hidden = true;
   } catch (e) { S.camDenied = true; const fb = $('#camfb'); if (fb) fb.hidden = false; }
   homeBusy = false;
 }
+function updateBg() {
+  const last = S.memos.find(m => m.photoUrl), img = $('#bgimg'), vid = $('#bgvid'), cam = S.tab === 'cam' && S.view === 'home';
+  if (img) { if (last) { if (img.getAttribute('src') !== last.photoUrl) img.src = last.photoUrl; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; } }
+  if (vid) { const live = S.liveBg && homeStream && !cam; vid.hidden = !live; if (live && vid.srcObject !== homeStream) { vid.srcObject = homeStream; vid.play().catch(() => {}); } }
+}
 function camView() {
-  const inbox = S.memos.filter(isInbox).length, last = S.memos.find(m => m.photoUrl);
+  const inbox = S.memos.filter(isInbox).length, rec = !!S.camRec, rp = S.camRec && S.camRec.photoUrl, last = S.memos.find(m => m.photoUrl);
   const due = S.threads.find(t => t.remind && !t.remind.done && t.state !== 'cerrado' && !S.dismissed[t.id] && ((t.remind.type === 'date' && t.remind.at <= Date.now()) || (t.remind.type === 'place' && S.pos && dist(S.pos, t.remind) <= t.remind.r)));
-  const cb = (act, icn, label, extra) => `<button class="cbtn" data-act="${act}" ${extra || ''}><span class="cc">${ic(icn, 26)}</span><span class="cl">${label}</span></button>`;
+  const mi = (tab, icn, label, extra) => `<button role="menuitem" data-act="${tab === 'inbox' ? 'open-inbox' : 'tab'}" ${tab === 'inbox' ? '' : `data-tab="${tab}"`}>${ic(icn, 20)}<span>${label}</span>${extra || ''}</button>`;
+  const menu = S.menu && !rec ? `<div class="cmenu-bg" data-act="menu-close"></div><div class="cmenu" role="menu">${mi('home', 'home', 'Hilos')}${mi('time', 'clock', 'Cronología')}${mi('search', 'search', 'Buscar')}${inbox ? mi('inbox', 'img', 'Sin motivo', `<b class="cdot">${inbox}</b>`) : ''}${mi('more', 'more', 'Más')}</div>` : '';
   return `<div class="camscreen"><video id="hcam" class="hcam" autoplay playsinline muted></video>
   <div class="camfb" id="camfb" ${S.canCam && !S.camDenied ? 'hidden' : ''}><h2>Tu cámara</h2><p>${S.canCam ? 'Permite la cámara para verla aquí.' : 'Aquí la cámara en vivo no está disponible.'}</p><label class="btn yellow" style="cursor:pointer">${ic('cam')} Tomar foto con el teléfono<input type="file" accept="image/*" capture="environment" hidden data-file="homephoto"></label></div>
   <div class="camshade top"></div><div class="camshade bot"></div>
-  <div class="camtop"><span class="cbrand">ancla</span>${due ? `<button class="camdue" data-act="open-thread" data-id="${due.id}">Recordatorio: ${esc(due.name)}</button>` : `<span class="camhint">Círculo: foto · Micrófono: voz</span>`}<button class="cbtn sm" data-act="cam-flip" aria-label="Girar cámara"><span class="cc">${ic('flip', 22)}</span></button></div>
-  <div class="camside">${cb('cam-voice', 'mic', 'Voz')}${cb('tab', 'home', 'Hilos', 'data-tab="home"')}${cb('tab', 'clock', 'Cronología', 'data-tab="time"')}${cb('tab', 'search', 'Buscar', 'data-tab="search"')}${inbox ? cb('open-inbox', 'img', 'Sin motivo') : ''}${cb('tab', 'more', 'Más', 'data-tab="more"')}</div>
-  <div class="cambot"><button class="gal" data-act="tab" data-tab="time" aria-label="Abrir cronología">${last ? `<img src="${last.photoUrl}" alt="">` : ic('img', 22)}</button><button class="shutter" data-act="cam-shoot" aria-label="Tomar foto"><span></span></button><span style="width:52px"></span></div></div>`;
+  <div class="camtop"><span class="cbrand">ancla</span>${rec ? `<span class="recchip"><i></i>Grabando <b id="crt">${fmtDur((Date.now() - recT0) / 1000)}</b></span>` : due ? `<button class="camdue" data-act="open-thread" data-id="${due.id}">Recordatorio: ${esc(due.name)}</button>` : ''}
+   <span class="ctools">${rec ? '' : `<button class="cbtn sm" data-act="menu" aria-label="Abrir menú" aria-expanded="${S.menu}"><span class="cc">${ic('menu', 22)}${inbox ? '<b class="cdot sm">' + inbox + '</b>' : ''}</span></button>`}<button class="cbtn sm" data-act="cam-flip" aria-label="Girar cámara"><span class="cc">${ic('flip', 22)}</span></button></span></div>
+  ${menu}
+  <div class="camside"><button class="cbtn voicebtn ${rec ? 'live' : ''}" data-act="cam-voice" aria-label="${rec ? 'Parar y guardar la nota de voz' : 'Grabar una nota de voz'}"><span class="cc">${ic(rec ? 'stop' : 'mic', 28)}</span><span class="cl">${rec ? 'Parar' : 'Voz'}</span></button>${rec ? `<button class="cbtn" data-act="cam-rec-cancel"><span class="cl">Cancelar</span></button>` : ''}</div>
+  <div class="cambot"><button class="gal" data-act="tab" data-tab="time" aria-label="Abrir cronología">${rp ? `<img src="${rp}" alt="">` : last ? `<img src="${last.photoUrl}" alt="">` : ic('img', 22)}</button><button class="shutter" data-act="cam-shoot" aria-label="Tomar foto"><span></span></button><span style="width:52px"></span></div></div>`;
+}
+async function camRecStart() {
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+    mr = new MediaRecorder(recStream, mime ? { mimeType: mime } : undefined); chunks = [];
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      clearInterval(recTimer); stopRecStream(); const cr = S.camRec; S.camRec = null;
+      if (!cr || cr.cancel) { if (cr && cr.photoUrl) URL.revokeObjectURL(cr.photoUrl); render(); return; }
+      const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' }), dur = (Date.now() - recT0) / 1000;
+      openSheet({ audio: blob, audioUrl: URL.createObjectURL(blob), dur, audioChanged: true, photo: cr.photo || null, photoUrl: cr.photo ? URL.createObjectURL(cr.photo) : null, photoChanged: !!cr.photo });
+      if (cr.photoUrl) URL.revokeObjectURL(cr.photoUrl);
+    };
+    mr.start(1000); recT0 = Date.now(); S.camRec = { photo: null, photoUrl: null }; S.menu = false; render();
+    recTimer = setInterval(() => { const el = $('#crt'); if (el) el.textContent = fmtDur((Date.now() - recT0) / 1000); }, 500);
+  } catch (e) { stopRecStream(); S.camRec = null; openSheet({}, { err: 'No pude usar el micrófono aquí. Usa «subir un audio» para grabar con la app del teléfono y adjuntarlo.' }); }
 }
 function banners() {
   const out = [];
@@ -441,6 +504,7 @@ function snippet(text, toks) {
 function moreView() {
   return `<div class="top"><div class="brand">Más</div></div>
   <div class="card"><label class="sw"><span><b>Abrir directo en la cámara</b><br><span class="muted">Como una app de video: la cámara aparece al abrir.</span></span><input type="checkbox" data-act="camfirst" ${S.camfirst ? 'checked' : ''}></label></div>
+  <div class="card"><label class="sw"><span><b>Cámara en vivo de fondo</b><br><span class="muted">Las demás pantallas se ven sobre la cámara. Gasta más batería y el teléfono muestra que la cámara está en uso. Apagado: se ve tu última foto.</span></span><input type="checkbox" data-act="livebg" ${S.liveBg ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Modo fácil</b><br><span class="muted">Tres botones grandes y letra grande.</span></span><input type="checkbox" data-act="easy" ${S.easy ? 'checked' : ''}></label></div>
   <div class="card"><div class="eyebrow">Tus datos</div><p>Todo se guarda en este teléfono, en el navegador o la app instalada. Nada se envía a ningún servidor.</p>
   <p class="muted" id="storageinfo"></p><button class="btn alt" data-act="persist">Pedir que no se borre solo</button></div>
@@ -452,7 +516,7 @@ function moreView() {
 /* ---------- capa: hoja de captura y modales ---------- */
 function renderLayer() {
   const L = $('#layer');
-  if (S.sheet) { L.innerHTML = `<div class="layer full" role="dialog" aria-modal="true" aria-label="Nuevo recuerdo"><div class="sheet">${sheetHTML()}</div></div>`; attachCam(); return; }
+  if (S.sheet) { L.innerHTML = `<div class="layer full" role="dialog" aria-modal="true" aria-label="Nuevo recuerdo" ${S.sheet.d.photoUrl ? `style="--sbg:url('${S.sheet.d.photoUrl}')"` : ''}><div class="sheet">${sheetHTML()}</div></div>`; attachCam(); return; }
   if (S.modal) { L.innerHTML = `<div class="layer" role="dialog" aria-modal="true"><div class="sheet">${modalHTML()}</div></div>`; return; }
   L.innerHTML = '';
 }
@@ -661,7 +725,7 @@ function editMemo(m, extraText) {
 }
 function openModal(m) { S.modal = m; setHash('ventana'); renderLayer(); }
 function closeModal() { S.modal = null; setHash(''); renderLayer(); }
-function go(tab) { S.tab = tab; S.view = 'home'; S.anim = true; render(); window.scrollTo(0, 0); }
+function go(tab) { S.menu = false; S.tab = tab; S.view = 'home'; S.anim = true; render(); window.scrollTo(0, 0); }
 function openThread(id) { S.threadId = id; S.view = 'thread'; S.tab = 'home'; S.anim = true; render(); window.scrollTo(0, 0); }
 
 document.addEventListener('click', async e => {
@@ -672,11 +736,14 @@ document.addEventListener('click', async e => {
   if (a === 'seek') { const au = $('#a-' + id); const r = el.getBoundingClientRect(); if (au && isFinite(au.duration)) au.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * au.duration; return; }
   if (a === 'home') { S.view = 'home'; S.tab = 'home'; S.anim = true; return render(); }
   if (a === 'open-thread') return openThread(id);
-  if (a === 'open-inbox') { S.view = 'inbox'; S.anim = true; return render(); }
+  if (a === 'open-inbox') { S.menu = false; S.view = 'inbox'; S.anim = true; return render(); }
   if (a === 'dismiss') { S.dismissed[id] = 1; const t = thr(id); if (t && t.remind && t.remind.type === 'date') { t.remind.done = true; await dbPut('threads', t); } return render(); }
   if (a === 'new') return openSheet({ threadId: el.dataset.thread || '' });
-  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(b => { openSheet({}); setPhoto(b); renderLayer(); }, 'image/jpeg', 0.88); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
-  if (a === 'cam-voice') return openSheet({}, { autoRec: true });
+  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(b => { if (S.camRec) { if (S.camRec.photoUrl) URL.revokeObjectURL(S.camRec.photoUrl); S.camRec.photo = b; S.camRec.photoUrl = URL.createObjectURL(b); toast('Foto añadida a tu nota de voz.'); render(); } else { openSheet({}); setPhoto(b); renderLayer(); } }, 'image/jpeg', 0.88); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
+  if (a === 'cam-voice') { if (S.camRec) { if (mr && mr.state !== 'inactive') mr.stop(); return; } return camRecStart(); }
+  if (a === 'cam-rec-cancel') { if (S.camRec) S.camRec.cancel = true; if (mr && mr.state !== 'inactive') mr.stop(); return; }
+  if (a === 'menu') { S.menu = !S.menu; return render(); }
+  if (a === 'menu-close') { S.menu = false; return render(); }
   if (a === 'cam-flip') { S.facing = S.facing === 'environment' ? 'user' : 'environment'; return syncHome(); }
   if (a === 'new-photo') return openSheet({}, { autoCam: S.canCam });
   if (a === 'sheet-close') return closeSheet();
@@ -732,6 +799,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', async e => {
   const t = e.target;
+  if (t.dataset.act === 'livebg') { S.liveBg = t.checked; try { localStorage.setItem('ancla.livebg', S.liveBg ? '1' : '0'); } catch (x) {} syncHome(); return updateBg(); }
   if (t.dataset.act === 'camfirst') { S.camfirst = t.checked; try { localStorage.setItem('ancla.camfirst', S.camfirst ? '1' : '0'); } catch (x) {} return; }
   if (t.dataset.act === 'easy') { S.easy = t.checked; try { localStorage.setItem('ancla.easy', S.easy ? '1' : '0'); } catch (x) {} return render(); }
   if (t.dataset.sum) { S.modal.o[t.dataset.sum] = t.checked; $('#sumprev').innerHTML = summaryHTML(thr(S.threadId), S.modal.o, false); return; }
@@ -781,7 +849,7 @@ function render() {
   const fm = !!document.querySelector('.feed, .camscreen'); document.documentElement.classList.toggle('feedmode', fm); document.body.classList.toggle('feedmode', fm);
   if (S.tab === 'more') { try { navigator.storage.estimate().then(e => { const el = $('#storageinfo'); if (el) el.textContent = 'Usado: ' + (e.usage / 1048576).toFixed(1) + ' MB de ' + Math.round(e.quota / 1048576) + ' MB disponibles.'; }); } catch (x) {} }
   renderLayer();
-  syncHome();
+  syncHome(); updateBg();
 }
 (async () => {
   try { await load(); } catch (e) { MEM = true; }
