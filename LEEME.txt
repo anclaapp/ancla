@@ -18,3 +18,10 @@ Todavia no incluye (necesita servidor)
 - Nube, invitar por enlace, notificaciones con la app cerrada, suscripcion Plus, transcripcion automatica de audios.
 
 Si ya habias instalado una version anterior: abre Ancla con internet una vez y cierrala por completo para que se actualice.
+
+NOVEDAD: FOTO RAPIDA Y GALERIA
+- Al tocar el boton de foto, la foto aparece como miniatura (abajo a la izquierda) y la camara sigue lista para la siguiente.
+- Toca la miniatura: la foto se abre a pantalla completa con el boton grande de voz. Al terminar de grabar, la voz queda anclada en la foto.
+- Pestana "Galeria": todas las fotos, con o sin voz, por dia, de la mas nueva a la mas vieja. Es tu copia dentro de Ancla.
+- Copia en el telefono: cada foto tambien se descarga como Ancla_AAAAMMDD_HHMMSS.jpg (carpeta Descargas). Se puede apagar en "Mas". Chrome puede pedirte permiso para descargas multiples: acepta.
+- Una carpeta propia "Ancla" dentro de Fotos solo es posible con la app nativa (Flutter), planeada despues.
