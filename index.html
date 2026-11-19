@@ -270,6 +270,17 @@ option{color:#1B1446}
 .vtip{width:100%;text-align:center;font-size:.75rem;font-weight:600;color:#CFC8F4}
 .vplayer{background:rgba(11,7,34,.7)}
 @media (prefers-reduced-motion:reduce){.vmic.live,.vanchor.playing,.viewer{animation:none}}
+/* visor limpio: foto a pantalla completa con iconos encima */
+.vstage{padding:0!important}
+.vphoto{border-radius:0!important;box-shadow:none!important;max-width:100vw;max-height:100svh}
+.vphoto>img{max-width:100vw!important;max-height:100svh!important;border-radius:0!important}
+.vbottom{background:linear-gradient(transparent,rgba(5,3,15,.7) 60%)!important;padding-top:60px}
+.vbar2{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.vbar2 .vsp{display:block}.vdelbtn{justify-self:end;margin-right:6px}
+.vinfo dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:.92rem}
+.vinfo dt{color:#CFC8F4;font-weight:700}.vinfo dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.vlink{color:var(--yellow);font-weight:700}
+.vtop{background:linear-gradient(rgba(5,3,15,.65),transparent)!important}
 </style></head><body><div id="bg" aria-hidden="true"><img id="bgimg" alt="" hidden><video id="bgvid" autoplay playsinline muted hidden></video><div class="bgshade"></div></div><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
 (() => {
 'use strict';
@@ -297,6 +308,8 @@ const IC = {
   play: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
   pause: '<path d="M8 5v14M16 5v14" stroke-width="3.5"/>',
   pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+  pinmap: '<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>',
   trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -415,7 +428,15 @@ async function camRecStart() {
       clearInterval(recTimer); stopRecStream(); const cr = S.camRec; S.camRec = null;
       if (!cr || cr.cancel) { if (cr && cr.photoUrl) URL.revokeObjectURL(cr.photoUrl); render(); return; }
       const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' }), dur = (Date.now() - recT0) / 1000;
-      openSheet({ audio: blob, audioUrl: URL.createObjectURL(blob), dur, audioChanged: true, photo: cr.photo || null, photoUrl: cr.photo ? URL.createObjectURL(cr.photo) : null, photoChanged: !!cr.photo });
+      if (cr.photo) {
+        const m = { id: uid(), ts: cr.photoTs || Date.now(), photo: cr.photo, audio: blob, dur, pins: [], text: '', threadId: null, private: false };
+        m.photoUrl = URL.createObjectURL(cr.photo); m.audioUrl = URL.createObjectURL(blob); urls.push(m.photoUrl, m.audioUrl);
+        persistMemo(m).then(() => { S.memos.unshift(m); exportToDevice(cr.photo, m.ts); openViewer(m.id); });
+        if (cr.placeP) cr.placeP.then(pl => { if (pl) { m.place = pl; persistMemo(m); if (S.viewer && S.viewer.id === m.id && S.viewer.panel === 'info') renderLayer(); } });
+        if (cr.photoUrl) URL.revokeObjectURL(cr.photoUrl);
+        return;
+      }
+      openSheet({ audio: blob, audioUrl: URL.createObjectURL(blob), dur, audioChanged: true, photo: null, photoUrl: null, photoChanged: false });
       if (cr.photoUrl) URL.revokeObjectURL(cr.photoUrl);
     };
     mr.start(1000); recT0 = Date.now(); S.camRec = { photo: null, photoUrl: null }; S.menu = false; render();
@@ -568,6 +589,7 @@ function snippet(text, toks) {
 function moreView() {
   return `<div class="top"><div class="brand">Más</div></div>
   <div class="card"><label class="sw"><span><b>Abrir directo en la cámara</b><br><span class="muted">Como una app de video: la cámara aparece al abrir.</span></span><input type="checkbox" data-act="camfirst" ${S.camfirst ? 'checked' : ''}></label></div>
+  <div class="card"><label class="sw"><span><b>Guardar el lugar de cada foto</b><br><span class="muted">Se guarda dónde la tomaste y lo ves en los datos de la foto. Solo queda en tu teléfono.</span></span><input type="checkbox" data-act="placepref" ${S.savePlace ? 'checked' : ''}></label></div>
   ${canAuto ? `<div class="card"><label class="sw"><span><b>Guardar copia de cada foto en el teléfono</b><br><span class="muted">Se guarda en Descargas y aparece en tu galería del teléfono (en iPhone usa el botón Guardar de cada foto). Chrome puede pedirte permiso la primera vez. Una carpeta propia de Ancla en Fotos requiere la versión nativa.</span></span><input type="checkbox" data-act="autocopy" ${S.autoCopy ? 'checked' : ''}></label></div>` : ''}
   <div class="card"><label class="sw"><span><b>Cámara en vivo de fondo</b><br><span class="muted">Las demás pantallas se ven sobre la cámara. Gasta más batería y el teléfono muestra que la cámara está en uso. Apagado: se ve tu última foto.</span></span><input type="checkbox" data-act="livebg" ${S.liveBg ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Modo fácil</b><br><span class="muted">Tres botones grandes y letra grande.</span></span><input type="checkbox" data-act="easy" ${S.easy ? 'checked' : ''}></label></div>
@@ -609,15 +631,21 @@ function viewerHTML() {
     : m.audio ? `<div class="fplayer vplayer"><button class="fplay" data-act="vplay" aria-label="Reproducir o pausar"><span class="iplay">${ic('play', 26)}</span><span class="ipause">${ic('pause', 26)}</span></button><div class="fbar" data-act="vseek"><div class="ffill"></div></div><span class="dur"><span class="ft">0:00</span> / ${fmtDur(m.dur)}</span><audio id="va" preload="metadata" src="${m.audioUrl}"></audio></div>`
     : `<p class="vhint">Toca el micrófono y cuenta por qué guardaste esta foto.</p>`;
   let panel = '';
+  if (v.panel === 'info') {
+    const d = new Date(m.ts), pl = m.place;
+    const when = d.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const where = pl ? `<a class="vlink" href="https://www.openstreetmap.org/?mlat=${pl.lat}&mlon=${pl.lng}#map=17/${pl.lat}/${pl.lng}" target="_blank" rel="noopener">${pl.lat}, ${pl.lng} · Ver en el mapa</a>` : `<span class="muted">${S.savePlace ? 'Sin ubicación (el teléfono no dio permiso o no hubo señal).' : 'Ubicación desactivada en Más.'}</span>`;
+    panel = `<div class="vpanel vinfo"><dl><dt>Fecha</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(fmtTime(m.ts))}</dd><dt>Lugar</dt><dd>${where}</dd>${m.audio ? `<dt>Voz</dt><dd>${fmtDur(m.dur)}</dd>` : ''}${t ? `<dt>Hilo</dt><dd>${esc(t.name)}</dd>` : ''}${m.text ? `<dt>Nota</dt><dd>${esc(m.text)}</dd>` : ''}</dl>
+    <div class="row"><button class="chip" data-act="vpanel" data-panel="note">${ic('pen', 16)}&nbsp;Nota</button><button class="chip" data-act="vpanel" data-panel="thread">${ic('tag', 16)}&nbsp;Hilo</button><button class="chip" data-act="vsave">${ic('download', 16)}&nbsp;Guardar en Fotos</button></div></div>`;
+  }
   if (v.panel === 'note') panel = `<div class="vpanel"><label class="sr" for="v-note">Nota escrita</label><textarea id="v-note" placeholder="Escribe una nota">${esc(m.text || '')}</textarea><div class="row"><button class="btn" data-act="vnote-save">Guardar nota</button>${S.canSpeech ? `<button class="chip" data-act="vdictate">${ic('mic', 16)}&nbsp;Dictar</button>` : ''}</div></div>`;
   if (v.panel === 'thread') panel = `<div class="vpanel"><div class="row"><button class="chip ${!m.threadId ? 'on' : ''}" data-act="vthread" data-id="">Sin hilo</button>${S.threads.filter(x => x.state !== 'cerrado').map(x => `<button class="chip ${m.threadId === x.id ? 'on' : ''}" data-act="vthread" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div><div class="row" style="flex-wrap:nowrap"><label class="sr" for="v-new">Hilo nuevo</label><input id="v-new" type="text" placeholder="Hilo nuevo, ej.: Casa en calle Pino"><button class="btn" data-act="vthread-new">Crear</button></div></div>`;
-  const tool = (act, icn, label, extra) => `<button class="vt" data-act="${act}" ${extra || ''}><span class="cc">${ic(icn, 22)}</span><span class="cl">${label}</span></button>`;
   return `<div class="viewer" role="dialog" aria-modal="true" aria-label="Foto"><img class="vbg" src="${m.photoUrl}" alt="">
   <div class="vstage"><div class="vphoto" data-act="vphoto"><img src="${m.photoUrl}" alt="Foto guardada">${pins}${livePins}${anchor}</div></div>
-  ${i > 0 ? `<button class="vnav l" data-act="vprev" aria-label="Foto más reciente">${ic('back', 26)}</button>` : ''}${i < list.length - 1 ? `<button class="vnav r" data-act="vnext" aria-label="Foto anterior">${ic('chev', 26)}</button>` : ''}
-  <div class="vtop"><button class="cbtn sm" data-act="viewer-close" aria-label="Cerrar"><span class="cc">${ic('close', 22)}</span></button><div class="vtitle"><b>${esc(dayLabel(m.ts))}</b><span>${fmtTime(m.ts)}${t ? ' · ' + esc(t.name) : ''}</span></div><span style="width:44px"></span></div>
+  ${i > 0 && !v.rec ? `<button class="vnav l" data-act="vprev" aria-label="Foto más reciente">${ic('back', 26)}</button>` : ''}${i < list.length - 1 && !v.rec ? `<button class="vnav r" data-act="vnext" aria-label="Foto anterior">${ic('chev', 26)}</button>` : ''}
+  <div class="vtop"><button class="cbtn sm" data-act="viewer-close" aria-label="Volver a la cámara"><span class="cc">${ic('close', 22)}</span></button><div class="vtitle"><b>${esc(dayLabel(m.ts))}</b><span>${fmtTime(m.ts)}</span></div><button class="cbtn sm" data-act="vpanel" data-panel="info" aria-label="Datos de la foto: fecha, hora y lugar"><span class="cc">${ic('info', 22)}</span></button></div>
   <div class="vbottom">${v.err ? `<p class="err">${esc(v.err)}</p>` : ''}${info}${panel}
-  <div class="vbar">${v.rec ? '' : tool('vpanel', 'pen', 'Nota', 'data-panel="note"')}${v.rec ? '' : tool('vpanel', 'tag', 'Hilo', 'data-panel="thread"')}<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>${v.rec ? '' : tool('vsave', 'download', 'Guardar')}${v.rec ? '' : tool('vdel', 'trash', 'Borrar')}</div></div></div>`;
+  <div class="vbar2">${v.rec ? '<span class="vsp"></span>' : `<span class="vsp"></span>`}<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>${v.rec ? '<span class="vsp"></span>' : `<button class="vt vdelbtn" data-act="vdel" aria-label="Borrar esta foto"><span class="cc">${ic('trash', 24)}</span><span class="cl">Borrar</span></button>`}</div></div></div>`;
 }
 async function vRecStart() {
   const v = S.viewer, m0 = S.memos.find(x => x.id === v.id); v.err = '';
@@ -637,6 +665,15 @@ async function vRecStart() {
   } catch (e) { stopRecStream(); v.rec = false; v.err = 'No pude usar el micrófono aquí. Instala Ancla en tu teléfono y permite el micrófono.'; renderLayer(); }
 }
 /* copia de cada foto en el teléfono (carpeta Descargas, visible en la galería) */
+S.savePlace = true; try { S.savePlace = localStorage.getItem('ancla.place') !== '0'; } catch (e) {}
+function getPlace() {
+  return new Promise(res => {
+    if (!S.savePlace || !navigator.geolocation) return res(null);
+    let done = false; const end = v => { if (!done) { done = true; res(v); } };
+    setTimeout(() => end(null), 6000);
+    try { navigator.geolocation.getCurrentPosition(p => end({ lat: +p.coords.latitude.toFixed(5), lng: +p.coords.longitude.toFixed(5), acc: Math.round(p.coords.accuracy || 0) }), () => end(null), { enableHighAccuracy: false, timeout: 5500, maximumAge: 60000 }); } catch (e) { end(null); }
+  });
+}
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let expQ = [], expBusy = false;
 async function expRun() {
@@ -906,9 +943,9 @@ document.addEventListener('click', async e => {
   if (a === 'vthread-new') { const name = (($('#v-new') || {}).value || '').trim(); if (!name) return toast('Escribe el nombre del hilo.'); const t = { id: uid(), name, state: 'explorando', created: Date.now(), decisions: [] }; await dbPut('threads', t); S.threads.push(t); const m = S.memos.find(x => x.id === S.viewer.id); m.threadId = t.id; await persistMemo(m); S.viewer.panel = null; renderLayer(); return toast('Hilo creado.'); }
   if (a === 'vsave') { const m = S.memos.find(x => x.id === S.viewer.id); await shareToPhotos(m); return; }
   if (a === 'vdel') {
-    if (!el.dataset.armed) { const lab = el.querySelector('.cl'); el.dataset.armed = '1'; lab.textContent = '¿Seguro?'; setTimeout(() => { el.dataset.armed = ''; lab.textContent = 'Borrar'; }, 4000); return; }
-    const v = S.viewer, list = viewerList(), i = list.findIndex(x => x.id === v.id), nxt = list[i + 1] || list[i - 1]; await dbDel('memos', v.id);
-    S.memos = S.memos.filter(x => x.id !== v.id); if (nxt) { S.viewer.id = nxt.id; S.viewer.panel = null; renderLayer(); } else closeViewer(); return toast('Foto borrada.');
+    const v = S.viewer; if (v.rec) return; document.querySelectorAll('audio').forEach(x => x.pause());
+    await dbDel('memos', v.id); S.memos = S.memos.filter(x => x.id !== v.id);
+    S.viewer = null; S.tab = 'cam'; S.view = 'home'; setHash(''); render(); return toast('Foto borrada.');
   }
   if (a === 'play') { const au = $('#a-' + id); if (au) { if (au.paused) { document.querySelectorAll('audio').forEach(x => { if (x !== au) x.pause(); }); au.play().catch(() => {}); } else au.pause(); } return; }
   if (a === 'seek') { const au = $('#a-' + id); const r = el.getBoundingClientRect(); if (au && isFinite(au.duration)) au.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * au.duration; return; }
@@ -917,7 +954,7 @@ document.addEventListener('click', async e => {
   if (a === 'open-inbox') { S.menu = false; S.view = 'inbox'; S.anim = true; return render(); }
   if (a === 'dismiss') { S.dismissed[id] = 1; const t = thr(id); if (t && t.remind && t.remind.type === 'date') { t.remind.done = true; await dbPut('threads', t); } return render(); }
   if (a === 'new') return openSheet({ threadId: el.dataset.thread || '' });
-  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); flash(); c.toBlob(async b => { if (S.camRec) { if (S.camRec.photoUrl) URL.revokeObjectURL(S.camRec.photoUrl); S.camRec.photo = b; S.camRec.photoUrl = URL.createObjectURL(b); toast('Foto añadida a tu nota de voz.'); render(); } else { const m = { id: uid(), ts: Date.now(), photo: b, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false }; await persistMemo(m); m.photoUrl = URL.createObjectURL(b); urls.push(m.photoUrl); S.memos.unshift(m); updateThumb(m); updateBg(); exportToDevice(b, m.ts); } }, 'image/jpeg', 0.9); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
+  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); flash(); c.toBlob(async b => { if (S.camRec) { if (S.camRec.photoUrl) URL.revokeObjectURL(S.camRec.photoUrl); S.camRec.photo = b; S.camRec.photoTs = Date.now(); S.camRec.photoUrl = URL.createObjectURL(b); S.camRec.placeP = getPlace(); toast('Foto añadida a tu nota de voz.'); render(); } else { const m = { id: uid(), ts: Date.now(), photo: b, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false }; await persistMemo(m); m.photoUrl = URL.createObjectURL(b); urls.push(m.photoUrl); S.memos.unshift(m); updateThumb(m); updateBg(); exportToDevice(b, m.ts); getPlace().then(pl => { if (pl) { m.place = pl; persistMemo(m); } }); } }, 'image/jpeg', 0.9); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
   if (a === 'cam-voice') { if (S.camRec) { if (mr && mr.state !== 'inactive') mr.stop(); return; } return camRecStart(); }
   if (a === 'cam-rec-cancel') { if (S.camRec) S.camRec.cancel = true; if (mr && mr.state !== 'inactive') mr.stop(); return; }
   if (a === 'menu') { S.menu = !S.menu; return render(); }
@@ -977,6 +1014,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', async e => {
   const t = e.target;
+  if (t.dataset.act === 'placepref') { S.savePlace = t.checked; try { localStorage.setItem('ancla.place', S.savePlace ? '1' : '0'); } catch (x) {} return; }
   if (t.dataset.act === 'autocopy') { S.autoCopy = t.checked; try { localStorage.setItem('ancla.autocopy', S.autoCopy ? '1' : '0'); } catch (x) {} return; }
   if (t.dataset.act === 'livebg') { S.liveBg = t.checked; try { localStorage.setItem('ancla.livebg', S.liveBg ? '1' : '0'); } catch (x) {} syncHome(); return updateBg(); }
   if (t.dataset.act === 'camfirst') { S.camfirst = t.checked; try { localStorage.setItem('ancla.camfirst', S.camfirst ? '1' : '0'); } catch (x) {} return; }

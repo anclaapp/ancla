@@ -30,3 +30,10 @@ MEJORAS DE GUARDADO
 - Boton "Guardar" en cada foto: abre el menu del telefono para guardarla en Fotos (en iPhone es la forma de tenerla en Fotos).
 - Las copias automaticas se hacen en fila, con una pausa entre cada una, para que Chrome no las bloquee.
 - La primera vez, Ancla te avisa donde quedo tu copia.
+
+VISOR DE FOTO (NUEVO)
+- La foto se ve a pantalla completa con los iconos encima. Solo hay dos acciones: grabar voz (boton amarillo grande) y borrar.
+- Borrar es inmediato, sin preguntar, y te lleva de vuelta a la camara. Una foto borrada no se puede recuperar.
+- Si grabas voz y tomas la foto desde la camara, al terminar se abre la foto a pantalla completa con el icono de voz para reproducirla ahi mismo.
+- Boton "i" (arriba a la derecha): fecha, hora y lugar de la foto. Ahi tambien estan Nota, Hilo y Guardar en Fotos.
+- El lugar se guarda con las coordenadas y un enlace para verlo en el mapa. Se puede apagar en Mas ("Guardar el lugar de cada foto"). El telefono te pedira permiso de ubicacion la primera vez.
