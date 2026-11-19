@@ -37,3 +37,12 @@ VISOR DE FOTO (NUEVO)
 - Si grabas voz y tomas la foto desde la camara, al terminar se abre la foto a pantalla completa con el icono de voz para reproducirla ahi mismo.
 - Boton "i" (arriba a la derecha): fecha, hora y lugar de la foto. Ahi tambien estan Nota, Hilo y Guardar en Fotos.
 - El lugar se guarda con las coordenadas y un enlace para verlo en el mapa. Se puede apagar en Mas ("Guardar el lugar de cada foto"). El telefono te pedira permiso de ubicacion la primera vez.
+
+CAMARA PROFESIONAL (NUEVO)
+- Boton de ajustes (arriba): 8 filtros en vivo (Natural, Calido, Frio, Vivido, Mate, B/N, Sepia, Dramatico), cuadricula y, si tu telefono lo permite, luz y zoom 1x/2x/3x.
+- El filtro se ve en la camara y queda aplicado en la foto y en el video.
+- FOTO / VIDEO (abajo): en modo video, toca el boton rojo para empezar y otra vez para parar. Los videos llevan su propio sonido, aparecen en la Galeria (filtro "Videos") y se ven a pantalla completa.
+- Ya NO se guarda nada en Descargas por defecto (se puede activar en Mas). Para mandar una foto o video a Fotos usa Guardar, en los datos (i).
+
+GUARDADO AUTOMATICO EN FOTOS
+- Una pagina web no puede pedir permiso para escribir en tu album de Fotos. Eso solo lo hace una app instalada (APK/tienda). El codigo ya esta preparado para guardar en un album "Ancla" cuando se empaquete como app (Capacitor); falta generar y probar ese paquete.

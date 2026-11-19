@@ -281,6 +281,25 @@ option{color:#1B1446}
 .vinfo dt{color:#CFC8F4;font-weight:700}.vinfo dd{margin:0;font-weight:600;overflow-wrap:anywhere}
 .vlink{color:var(--yellow);font-weight:700}
 .vtop{background:linear-gradient(rgba(5,3,15,.65),transparent)!important}
+/* filtros, modos y video */
+.camgrid{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.35) 33.33%,transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) 66.66%,transparent calc(66.66% + .5px)),linear-gradient(transparent calc(33.33% - .5px),rgba(255,255,255,.35) 33.33%,transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) 66.66%,transparent calc(66.66% + .5px))}
+.campanel{position:absolute;z-index:4;left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom,0px));padding:10px 12px;background:linear-gradient(transparent,rgba(5,3,15,.78) 35%);display:flex;flex-direction:column;gap:10px}
+.fstrip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none}.fstrip::-webkit-scrollbar{display:none}
+.fchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;color:#fff;font-size:.7rem;font-weight:700;padding:0;min-width:58px}
+.fsw{width:50px;height:50px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);display:block}
+.fchip.on .fsw{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(255,200,61,.4)}
+.fchip.on{color:var(--yellow)}
+.ftools{display:flex;gap:8px;flex-wrap:wrap}
+.modes{position:absolute;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:22px}
+.modes button{background:none;border:0;color:rgba(255,255,255,.65);font-weight:800;font-size:.78rem;letter-spacing:1.5px;padding:6px 4px;min-height:32px}
+.modes button.on{color:var(--yellow);border-bottom:2px solid var(--yellow)}
+.cambot{padding-bottom:calc(46px + env(safe-area-inset-bottom,0px))!important}
+.shutter.vid span{background:#FF3B5C}
+.shutter.rec span{border-radius:14px;width:34px;height:34px}
+.shutter.rec{border-color:#FF3B5C}
+.gbadge.vid{background:#FF3B5C;color:#fff}
+.vvideo{display:block;max-width:100vw;max-height:100svh;background:#000}
+.modes{z-index:5}
 </style></head><body><div id="bg" aria-hidden="true"><img id="bgimg" alt="" hidden><video id="bgvid" autoplay playsinline muted hidden></video><div class="bgshade"></div></div><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
 (() => {
 'use strict';
@@ -310,6 +329,11 @@ const IC = {
   pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
   pinmap: '<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  video: '<rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 10l5-3v10l-5-3z"/>',
+  bolt: '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>',
+  grid: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9.5 4v16M14.5 4v16M4 9.5h16M4 14.5h16"/>',
+  zoom: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/>',
   trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -343,14 +367,26 @@ async function dbDel(st, id) { if (!MEM) { try { await tx(st, 'readwrite', s => 
 /* ---------- estado ---------- */
 const S = { view: 'home', tab: 'home', threadId: null, memos: [], threads: [], easy: false, sheet: null, modal: null, q: '', pos: null, dismissed: {}, listening: false };
 try { S.easy = localStorage.getItem('ancla.easy') === '1'; } catch (e) {}
+S.mode = 'photo'; S.filter = 'none'; S.fopen = false; S.vrec = null; S.grid = false; S.torch = false; S.zoomI = 0;
 S.camfirst = true; try { S.camfirst = localStorage.getItem('ancla.camfirst') !== '0'; } catch (e) {}
 S.tab = S.camfirst ? 'cam' : 'home'; S.facing = 'environment'; S.menu = false; S.camRec = null; S.viewer = null; S.galFilter = 'all'; S.popId = null;
-const canAuto = !window.claude; S.autoCopy = false; try { S.autoCopy = canAuto && localStorage.getItem('ancla.autocopy') !== '0'; } catch (e) { S.autoCopy = canAuto; }
+const canAuto = !window.claude; S.autoCopy = false; try { S.autoCopy = canAuto && localStorage.getItem('ancla.autocopy') === '1'; } catch (e) { S.autoCopy = false; }
 S.liveBg = false; try { S.liveBg = localStorage.getItem('ancla.livebg') === '1'; } catch (e) {}
 const thr = id => S.threads.find(t => t.id === id);
 const memosOf = id => S.memos.filter(m => m.threadId === id).sort((a, b) => b.ts - a.ts);
 const lastActivity = t => Math.max(t.created || 0, ...memosOf(t.id).map(m => m.ts), ...(t.decisions || []).map(d => d.ts));
-const isInbox = m => !m.audio && !m.text;
+const isInbox = m => !m.audio && !m.text && !m.video;
+const FILTERS = [
+  { id: 'none', n: 'Natural', css: '', sw: 'linear-gradient(135deg,#8DB6D6,#C9B58E)' },
+  { id: 'warm', n: 'Cálido', css: 'sepia(.25) saturate(1.25) hue-rotate(-10deg) brightness(1.05)', sw: 'linear-gradient(135deg,#F2B84B,#E4572E)' },
+  { id: 'cool', n: 'Frío', css: 'hue-rotate(15deg) saturate(1.1) brightness(1.03) contrast(1.05)', sw: 'linear-gradient(135deg,#6FA3C8,#7C4DFF)' },
+  { id: 'vivid', n: 'Vívido', css: 'saturate(1.55) contrast(1.1)', sw: 'linear-gradient(135deg,#FF4D8D,#FFC83D)' },
+  { id: 'matte', n: 'Mate', css: 'contrast(.88) saturate(.85) brightness(1.08)', sw: 'linear-gradient(135deg,#C8C0D8,#8F9CB3)' },
+  { id: 'mono', n: 'B/N', css: 'grayscale(1) contrast(1.15)', sw: 'linear-gradient(135deg,#eee,#222)' },
+  { id: 'sepia', n: 'Sepia', css: 'sepia(.9) contrast(1.05)', sw: 'linear-gradient(135deg,#C9A27A,#6B4A2B)' },
+  { id: 'drama', n: 'Dramático', css: 'contrast(1.35) saturate(1.2) brightness(.9)', sw: 'linear-gradient(135deg,#2A1A6E,#E4572E)' }
+];
+const filterCss = () => (FILTERS.find(f => f.id === S.filter) || FILTERS[0]).css;
 const urls = [];
 async function load() {
   urls.splice(0).forEach(u => URL.revokeObjectURL(u));
@@ -359,6 +395,7 @@ async function load() {
   S.memos.forEach(m => {
     if (m.photo) { m.photoUrl = URL.createObjectURL(m.photo); urls.push(m.photoUrl); }
     if (m.audio) { m.audioUrl = URL.createObjectURL(m.audio); urls.push(m.audioUrl); }
+    if (m.video) { m.videoUrl = URL.createObjectURL(m.video); urls.push(m.videoUrl); }
   });
 }
 async function reload() { await load(); render(); }
@@ -404,19 +441,26 @@ function updateBg() {
   if (img) { if (last) { if (img.getAttribute('src') !== last.photoUrl) img.src = last.photoUrl; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; } }
   if (vid) { const live = S.liveBg && homeStream && !cam; vid.hidden = !live; if (live && vid.srcObject !== homeStream) { vid.srcObject = homeStream; vid.play().catch(() => {}); } }
 }
+function camCaps() { try { const t = homeStream && homeStream.getVideoTracks()[0]; return (t && t.getCapabilities && t.getCapabilities()) || {}; } catch (e) { return {}; } }
+function camPanel() {
+  const caps = camCaps(), zl = caps.zoom ? [1, 2, 3].filter(z => z <= caps.zoom.max + 0.01) : [];
+  const chips = FILTERS.map(f => `<button class="fchip ${S.filter === f.id ? 'on' : ''}" data-act="cam-filter" data-f="${f.id}" aria-pressed="${S.filter === f.id}"><span class="fsw" style="background:${f.sw}"></span><span>${f.n}</span></button>`).join('');
+  return `<div class="campanel" role="group" aria-label="Filtros y ajustes"><div class="fstrip">${chips}</div><div class="ftools"><button class="chip ${S.grid ? 'on' : ''}" data-act="cam-grid">${ic('grid', 16)}&nbsp;Cuadrícula</button>${caps.torch ? `<button class="chip ${S.torch ? 'on' : ''}" data-act="cam-torch">${ic('bolt', 16)}&nbsp;Luz</button>` : ''}${zl.length > 1 ? `<button class="chip" data-act="cam-zoom">${ic('zoom', 16)}&nbsp;Zoom ${zl[S.zoomI % zl.length]}×</button>` : ''}</div></div>`;
+}
 function camView() {
   const inbox = S.memos.filter(isInbox).length, rec = !!S.camRec, rp = S.camRec && S.camRec.photoUrl, last = S.memos.find(m => m.photoUrl);
   const due = S.threads.find(t => t.remind && !t.remind.done && t.state !== 'cerrado' && !S.dismissed[t.id] && ((t.remind.type === 'date' && t.remind.at <= Date.now()) || (t.remind.type === 'place' && S.pos && dist(S.pos, t.remind) <= t.remind.r)));
   const mi = (tab, icn, label, extra) => `<button role="menuitem" data-act="${tab === 'inbox' ? 'open-inbox' : 'tab'}" ${tab === 'inbox' ? '' : `data-tab="${tab}"`}>${ic(icn, 20)}<span>${label}</span>${extra || ''}</button>`;
   const menu = S.menu && !rec ? `<div class="cmenu-bg" data-act="menu-close"></div><div class="cmenu" role="menu">${mi('home', 'home', 'Hilos')}${mi('gal', 'img', 'Galería')}${mi('search', 'search', 'Buscar')}${inbox ? mi('inbox', 'img', 'Sin motivo', `<b class="cdot">${inbox}</b>`) : ''}${mi('more', 'more', 'Más')}</div>` : '';
-  return `<div class="camscreen"><video id="hcam" class="hcam" autoplay playsinline muted></video>
+  return `<div class="camscreen"><video id="hcam" class="hcam" autoplay playsinline muted style="${filterCss() ? 'filter:' + filterCss() : ''}"></video>${S.grid ? '<div class="camgrid" aria-hidden="true"></div>' : ''}
   <div class="camfb" id="camfb" ${S.canCam && !S.camDenied ? 'hidden' : ''}><h2>Tu cámara</h2><p>${S.canCam ? 'Permite la cámara para verla aquí.' : 'Aquí la cámara en vivo no está disponible.'}</p><label class="btn yellow" style="cursor:pointer">${ic('cam')} Tomar foto con el teléfono<input type="file" accept="image/*" capture="environment" hidden data-file="homephoto"></label></div>
   <div class="camshade top"></div><div class="camshade bot"></div>
-  <div class="camtop"><span class="cbrand">ancla</span>${rec ? `<span class="recchip"><i></i>Grabando <b id="crt">${fmtDur((Date.now() - recT0) / 1000)}</b></span>` : due ? `<button class="camdue" data-act="open-thread" data-id="${due.id}">Recordatorio: ${esc(due.name)}</button>` : ''}
-   <span class="ctools">${rec ? '' : `<button class="cbtn sm" data-act="menu" aria-label="Abrir menú" aria-expanded="${S.menu}"><span class="cc">${ic('menu', 22)}${inbox ? '<b class="cdot sm">' + inbox + '</b>' : ''}</span></button>`}<button class="cbtn sm" data-act="cam-flip" aria-label="Girar cámara"><span class="cc">${ic('flip', 22)}</span></button></span></div>
+  <div class="camtop"><span class="cbrand">ancla</span>${S.vrec ? `<span class="recchip"><i></i>REC <b id="vct">${fmtDur((Date.now() - S.vrec.t0) / 1000)}</b></span>` : rec ? `<span class="recchip"><i></i>Grabando <b id="crt">${fmtDur((Date.now() - recT0) / 1000)}</b></span>` : due ? `<button class="camdue" data-act="open-thread" data-id="${due.id}">Recordatorio: ${esc(due.name)}</button>` : ''}
+   <span class="ctools">${rec || S.vrec ? '' : `<button class="cbtn sm" data-act="cam-panel" aria-label="Filtros y ajustes de cámara" aria-expanded="${S.fopen}"><span class="cc">${ic('sliders', 22)}${S.filter !== 'none' ? '<b class="cdot sm">•</b>' : ''}</span></button><button class="cbtn sm" data-act="menu" aria-label="Abrir menú" aria-expanded="${S.menu}"><span class="cc">${ic('menu', 22)}${inbox ? '<b class="cdot sm">' + inbox + '</b>' : ''}</span></button>`}<button class="cbtn sm" data-act="cam-flip" aria-label="Girar cámara"><span class="cc">${ic('flip', 22)}</span></button></span></div>
   ${menu}
-  <div class="camside"><button class="cbtn voicebtn ${rec ? 'live' : ''}" data-act="cam-voice" aria-label="${rec ? 'Parar y guardar la nota de voz' : 'Grabar una nota de voz'}"><span class="cc">${ic(rec ? 'stop' : 'mic', 28)}</span><span class="cl">${rec ? 'Parar' : 'Voz'}</span></button>${rec ? `<button class="cbtn" data-act="cam-rec-cancel"><span class="cl">Cancelar</span></button>` : ''}</div>
-  <div class="cambot"><button class="gal" data-act="cam-thumb" aria-label="Abrir la última foto">${rp ? `<img src="${rp}" alt="">` : last ? `<img src="${last.photoUrl}" alt="">` : ic('img', 22)}</button><button class="shutter" data-act="cam-shoot" aria-label="Tomar foto"><span></span></button><span style="width:52px"></span></div></div>`;
+  ${S.fopen && !rec && !S.vrec ? camPanel() : ''}
+  <div class="camside">${S.mode === 'video' ? '' : `<button class="cbtn voicebtn ${rec ? 'live' : ''}" data-act="cam-voice" aria-label="${rec ? 'Parar y guardar la nota de voz' : 'Grabar una nota de voz'}"><span class="cc">${ic(rec ? 'stop' : 'mic', 28)}</span><span class="cl">${rec ? 'Parar' : 'Voz'}</span></button>${rec ? `<button class="cbtn" data-act="cam-rec-cancel"><span class="cl">Cancelar</span></button>` : ''}`}</div>
+  <div class="cambot"><button class="gal" data-act="cam-thumb" aria-label="Abrir la última foto">${rp ? `<img src="${rp}" alt="">` : last ? `<img src="${last.photoUrl}" alt="">` : ic('img', 22)}</button><button class="shutter ${S.mode === 'video' ? 'vid' : ''} ${S.vrec ? 'rec' : ''}" data-act="cam-shoot" aria-label="${S.mode === 'video' ? (S.vrec ? 'Parar el video' : 'Empezar a grabar video') : 'Tomar foto'}"><span></span></button><span style="width:52px"></span></div>${rec || S.vrec ? '' : `<div class="modes" role="tablist"><button role="tab" aria-selected="${S.mode === 'photo'}" class="${S.mode === 'photo' ? 'on' : ''}" data-act="cam-mode" data-mode="photo">FOTO</button><button role="tab" aria-selected="${S.mode === 'video'}" class="${S.mode === 'video' ? 'on' : ''}" data-act="cam-mode" data-mode="video">VIDEO</button></div>`}</div>`;
 }
 async function camRecStart() {
   try {
@@ -519,16 +563,16 @@ function dayLabel(ts) {
 }
 function galView() {
   const f = S.galFilter || 'all';
-  const list = S.memos.filter(m => f === 'voice' ? !!m.audio : f === 'novoice' ? !m.audio : true);
-  const nv = S.memos.filter(m => m.audio).length;
-  let h = `<div class="top"><div class="brand">Galería</div><span class="muted">${S.memos.length} ${S.memos.length === 1 ? 'recuerdo' : 'recuerdos'} · ${nv} con voz</span></div>
-  <div class="row"><button class="chip ${f === 'all' ? 'on' : ''}" data-act="gfilter" data-f="all">Todas</button><button class="chip ${f === 'voice' ? 'on' : ''}" data-act="gfilter" data-f="voice">Con voz</button><button class="chip ${f === 'novoice' ? 'on' : ''}" data-act="gfilter" data-f="novoice">Sin voz</button></div>`;
+  const list = S.memos.filter(m => f === 'voice' ? !!m.audio : f === 'novoice' ? !m.audio && !m.video : f === 'video' ? !!m.video : true);
+  const nv = S.memos.filter(m => m.audio).length, nvid = S.memos.filter(m => m.video).length;
+  let h = `<div class="top"><div class="brand">Galería</div><span class="muted">${S.memos.length} ${S.memos.length === 1 ? 'recuerdo' : 'recuerdos'} · ${nv} con voz${nvid ? ' · ' + nvid + ' video' + (nvid > 1 ? 's' : '') : ''}</span></div>
+  <div class="row"><button class="chip ${f === 'all' ? 'on' : ''}" data-act="gfilter" data-f="all">Todas</button><button class="chip ${f === 'voice' ? 'on' : ''}" data-act="gfilter" data-f="voice">Con voz</button><button class="chip ${f === 'novoice' ? 'on' : ''}" data-act="gfilter" data-f="novoice">Sin voz</button><button class="chip ${f === 'video' ? 'on' : ''}" data-act="gfilter" data-f="video">Videos</button></div>`;
   if (!list.length) return h + `<div class="card empty"><p class="muted">${S.memos.length ? 'No hay fotos con este filtro.' : 'Aún no hay fotos. Cada foto que tomes aparece aquí.'}</p><button class="btn yellow" data-act="tab" data-tab="cam">Abrir la cámara</button></div>`;
   let day = '', open = false;
   list.forEach(m => {
     const k = new Date(m.ts).toDateString();
     if (k !== day) { if (open) h += '</div>'; day = k; open = true; h += `<div class="gday">${esc(dayLabel(m.ts))}</div><div class="ggrid">`; }
-    h += `<button class="gtile ${m.photoUrl ? '' : 'nophoto ' + grad(m.id)}" data-act="view" data-id="${m.id}" aria-label="${m.photoUrl ? 'Foto' : 'Nota'} del ${esc(fmtDate(m.ts))}${m.audio ? ', con voz' : ''}">${m.photoUrl ? `<img src="${m.photoUrl}" alt="" loading="lazy" decoding="async">` : `<span class="gtxt">${esc((m.text || '').slice(0, 90))}</span>`}${m.audio ? `<span class="gbadge">${ic('mic', 13)}${fmtDur(m.dur)}</span>` : ''}</button>`;
+    h += `<button class="gtile ${m.photoUrl ? '' : 'nophoto ' + grad(m.id)}" data-act="view" data-id="${m.id}" aria-label="${m.photoUrl ? 'Foto' : 'Nota'} del ${esc(fmtDate(m.ts))}${m.audio ? ', con voz' : ''}">${m.photoUrl ? `<img src="${m.photoUrl}" alt="" loading="lazy" decoding="async">` : `<span class="gtxt">${esc((m.text || '').slice(0, 90))}</span>`}${m.video ? `<span class="gbadge vid">${ic('video', 13)}${fmtDur(m.vdur)}</span>` : ''}${m.audio ? `<span class="gbadge">${ic('mic', 13)}${fmtDur(m.dur)}</span>` : ''}</button>`;
   });
   return h + (open ? '</div>' : '') + `<p class="muted" style="text-align:center">Las fotos se guardan en este teléfono, de la más nueva a la más vieja.</p>`;
 }
@@ -590,7 +634,7 @@ function moreView() {
   return `<div class="top"><div class="brand">Más</div></div>
   <div class="card"><label class="sw"><span><b>Abrir directo en la cámara</b><br><span class="muted">Como una app de video: la cámara aparece al abrir.</span></span><input type="checkbox" data-act="camfirst" ${S.camfirst ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Guardar el lugar de cada foto</b><br><span class="muted">Se guarda dónde la tomaste y lo ves en los datos de la foto. Solo queda en tu teléfono.</span></span><input type="checkbox" data-act="placepref" ${S.savePlace ? 'checked' : ''}></label></div>
-  ${canAuto ? `<div class="card"><label class="sw"><span><b>Guardar copia de cada foto en el teléfono</b><br><span class="muted">Se guarda en Descargas y aparece en tu galería del teléfono (en iPhone usa el botón Guardar de cada foto). Chrome puede pedirte permiso la primera vez. Una carpeta propia de Ancla en Fotos requiere la versión nativa.</span></span><input type="checkbox" data-act="autocopy" ${S.autoCopy ? 'checked' : ''}></label></div>` : ''}
+  ${canAuto ? `<div class="card"><label class="sw"><span><b>Copia automática en Descargas (opcional)</b><br><span class="muted">Apagada por defecto. Para guardar una foto en Fotos usa el botón Guardar de sus datos (i). El guardado automático en un álbum «Ancla» de Fotos solo funciona en la app instalada con permisos.</span></span><input type="checkbox" data-act="autocopy" ${S.autoCopy ? 'checked' : ''}></label></div>` : ''}
   <div class="card"><label class="sw"><span><b>Cámara en vivo de fondo</b><br><span class="muted">Las demás pantallas se ven sobre la cámara. Gasta más batería y el teléfono muestra que la cámara está en uso. Apagado: se ve tu última foto.</span></span><input type="checkbox" data-act="livebg" ${S.liveBg ? 'checked' : ''}></label></div>
   <div class="card"><label class="sw"><span><b>Modo fácil</b><br><span class="muted">Tres botones grandes y letra grande.</span></span><input type="checkbox" data-act="easy" ${S.easy ? 'checked' : ''}></label></div>
   <div class="card"><div class="eyebrow">Tus datos</div><p>Todo se guarda en este teléfono, en el navegador o la app instalada. Nada se envía a ningún servidor.</p>
@@ -610,7 +654,7 @@ function renderLayer() {
 }
 /* ---------- visor de foto a pantalla completa ---------- */
 const viewerList = () => S.memos.filter(m => m.photoUrl);
-const persistMemo = m => { const r = Object.assign({}, m); delete r.photoUrl; delete r.audioUrl; delete r.photoData; return dbPut('memos', r); };
+const persistMemo = m => { const r = Object.assign({}, m); delete r.photoUrl; delete r.audioUrl; delete r.videoUrl; delete r.photoData; return dbPut('memos', r); };
 function openViewer(id) { const m = S.memos.find(x => x.id === id); if (!m) return; if (!m.photoUrl) return editMemo(m); stopHome(); S.viewer = { id, rec: false, panel: null, err: '', pins: [] }; setHash('foto'); renderLayer(); }
 function closeViewer() {
   document.querySelectorAll('audio').forEach(a => a.pause());
@@ -635,17 +679,17 @@ function viewerHTML() {
     const d = new Date(m.ts), pl = m.place;
     const when = d.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     const where = pl ? `<a class="vlink" href="https://www.openstreetmap.org/?mlat=${pl.lat}&mlon=${pl.lng}#map=17/${pl.lat}/${pl.lng}" target="_blank" rel="noopener">${pl.lat}, ${pl.lng} · Ver en el mapa</a>` : `<span class="muted">${S.savePlace ? 'Sin ubicación (el teléfono no dio permiso o no hubo señal).' : 'Ubicación desactivada en Más.'}</span>`;
-    panel = `<div class="vpanel vinfo"><dl><dt>Fecha</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(fmtTime(m.ts))}</dd><dt>Lugar</dt><dd>${where}</dd>${m.audio ? `<dt>Voz</dt><dd>${fmtDur(m.dur)}</dd>` : ''}${t ? `<dt>Hilo</dt><dd>${esc(t.name)}</dd>` : ''}${m.text ? `<dt>Nota</dt><dd>${esc(m.text)}</dd>` : ''}</dl>
+    panel = `<div class="vpanel vinfo"><dl><dt>Fecha</dt><dd>${esc(when)}</dd><dt>Hora</dt><dd>${esc(fmtTime(m.ts))}</dd><dt>Lugar</dt><dd>${where}</dd>${m.video ? `<dt>Video</dt><dd>${fmtDur(m.vdur)}</dd>` : ''}${m.audio ? `<dt>Voz</dt><dd>${fmtDur(m.dur)}</dd>` : ''}${t ? `<dt>Hilo</dt><dd>${esc(t.name)}</dd>` : ''}${m.text ? `<dt>Nota</dt><dd>${esc(m.text)}</dd>` : ''}</dl>
     <div class="row"><button class="chip" data-act="vpanel" data-panel="note">${ic('pen', 16)}&nbsp;Nota</button><button class="chip" data-act="vpanel" data-panel="thread">${ic('tag', 16)}&nbsp;Hilo</button><button class="chip" data-act="vsave">${ic('download', 16)}&nbsp;Guardar en Fotos</button></div></div>`;
   }
   if (v.panel === 'note') panel = `<div class="vpanel"><label class="sr" for="v-note">Nota escrita</label><textarea id="v-note" placeholder="Escribe una nota">${esc(m.text || '')}</textarea><div class="row"><button class="btn" data-act="vnote-save">Guardar nota</button>${S.canSpeech ? `<button class="chip" data-act="vdictate">${ic('mic', 16)}&nbsp;Dictar</button>` : ''}</div></div>`;
   if (v.panel === 'thread') panel = `<div class="vpanel"><div class="row"><button class="chip ${!m.threadId ? 'on' : ''}" data-act="vthread" data-id="">Sin hilo</button>${S.threads.filter(x => x.state !== 'cerrado').map(x => `<button class="chip ${m.threadId === x.id ? 'on' : ''}" data-act="vthread" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div><div class="row" style="flex-wrap:nowrap"><label class="sr" for="v-new">Hilo nuevo</label><input id="v-new" type="text" placeholder="Hilo nuevo, ej.: Casa en calle Pino"><button class="btn" data-act="vthread-new">Crear</button></div></div>`;
   return `<div class="viewer" role="dialog" aria-modal="true" aria-label="Foto"><img class="vbg" src="${m.photoUrl}" alt="">
-  <div class="vstage"><div class="vphoto" data-act="vphoto"><img src="${m.photoUrl}" alt="Foto guardada">${pins}${livePins}${anchor}</div></div>
+  <div class="vstage"><div class="vphoto" ${m.video ? '' : 'data-act="vphoto"'}>${m.video ? `<video class="vvideo" src="${m.videoUrl}" poster="${m.photoUrl}" controls playsinline autoplay></video>` : `<img src="${m.photoUrl}" alt="Foto guardada">`}${pins}${livePins}${anchor}</div></div>
   ${i > 0 && !v.rec ? `<button class="vnav l" data-act="vprev" aria-label="Foto más reciente">${ic('back', 26)}</button>` : ''}${i < list.length - 1 && !v.rec ? `<button class="vnav r" data-act="vnext" aria-label="Foto anterior">${ic('chev', 26)}</button>` : ''}
   <div class="vtop"><button class="cbtn sm" data-act="viewer-close" aria-label="Volver a la cámara"><span class="cc">${ic('close', 22)}</span></button><div class="vtitle"><b>${esc(dayLabel(m.ts))}</b><span>${fmtTime(m.ts)}</span></div><button class="cbtn sm" data-act="vpanel" data-panel="info" aria-label="Datos de la foto: fecha, hora y lugar"><span class="cc">${ic('info', 22)}</span></button></div>
   <div class="vbottom">${v.err ? `<p class="err">${esc(v.err)}</p>` : ''}${info}${panel}
-  <div class="vbar2">${v.rec ? '<span class="vsp"></span>' : `<span class="vsp"></span>`}<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>${v.rec ? '<span class="vsp"></span>' : `<button class="vt vdelbtn" data-act="vdel" aria-label="Borrar esta foto"><span class="cc">${ic('trash', 24)}</span><span class="cl">Borrar</span></button>`}</div></div></div>`;
+  <div class="vbar2">${m.video ? '<span class="vsp"></span>' : `<span class="vsp"></span>`}${m.video ? '' : `<button class="vmic ${v.rec ? 'live' : ''}" data-act="vrec" aria-label="${v.rec ? 'Parar y guardar la voz' : m.audio ? 'Grabar de nuevo la voz' : 'Grabar tu voz en esta foto'}">${ic(v.rec ? 'stop' : 'mic', 34)}</button>`}${v.rec ? '<span class="vsp"></span>' : `<button class="vt vdelbtn" data-act="vdel" aria-label="Borrar esta foto"><span class="cc">${ic('trash', 24)}</span><span class="cl">Borrar</span></button>`}</div></div></div>`;
 }
 async function vRecStart() {
   const v = S.viewer, m0 = S.memos.find(x => x.id === v.id); v.err = '';
@@ -674,6 +718,32 @@ function getPlace() {
     try { navigator.geolocation.getCurrentPosition(p => end({ lat: +p.coords.latitude.toFixed(5), lng: +p.coords.longitude.toFixed(5), acc: Math.round(p.coords.accuracy || 0) }), () => end(null), { enableHighAccuracy: false, timeout: 5500, maximumAge: 60000 }); } catch (e) { end(null); }
   });
 }
+let vrecObj = null;
+async function startVideo() {
+  if (!homeStream || !window.MediaRecorder) return toast('Aquí no se puede grabar video. Instala Ancla en tu teléfono.');
+  const rv = document.createElement('video'); rv.muted = true; rv.playsInline = true; rv.srcObject = homeStream;
+  try { await rv.play(); } catch (e) {}
+  if (!rv.videoWidth) await new Promise(r => { rv.onloadedmetadata = r; setTimeout(r, 1500); });
+  const w = rv.videoWidth || 640, h = rv.videoHeight || 480, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cx = c.getContext('2d'), css = filterCss(); let live = true, raf = 0;
+  const draw = () => { if (!live) return; try { cx.filter = css || 'none'; } catch (e) {} cx.drawImage(rv, 0, 0, w, h); raf = requestAnimationFrame(draw); }; draw();
+  const out = c.captureStream(30); let mic = null;
+  try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); mic.getAudioTracks().forEach(t => out.addTrack(t)); } catch (e) { toast('Sin micrófono: el video se graba sin sonido.'); }
+  const mime = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find(x => MediaRecorder.isTypeSupported(x));
+  const rec = new MediaRecorder(out, mime ? { mimeType: mime, videoBitsPerSecond: 4000000 } : undefined), parts = [], t0 = Date.now();
+  rec.ondataavailable = e => { if (e.data && e.data.size) parts.push(e.data); };
+  rec.onstop = async () => {
+    const dur = (Date.now() - t0) / 1000;
+    const poster = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+    live = false; cancelAnimationFrame(raf); rv.srcObject = null; if (mic) mic.getTracks().forEach(t => t.stop()); clearInterval(vrecObj && vrecObj.timer); vrecObj = null; S.vrec = null;
+    const blob = new Blob(parts, { type: rec.mimeType || 'video/webm' });
+    const m = { id: uid(), ts: t0, photo: poster, video: blob, vdur: dur, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false };
+    await persistMemo(m); m.photoUrl = URL.createObjectURL(poster); m.videoUrl = URL.createObjectURL(blob); urls.push(m.photoUrl, m.videoUrl); S.memos.unshift(m);
+    render(); exportToDevice(blob, m.ts, 'video'); getPlace().then(pl => { if (pl) { m.place = pl; persistMemo(m); } }); toast('Video guardado.');
+  };
+  rec.start(1000); S.vrec = { t0 }; vrecObj = { rec, timer: setInterval(() => { const el = $('#vct'); if (el) el.textContent = fmtDur((Date.now() - t0) / 1000); }, 500) }; render();
+}
+function stopVideo() { if (vrecObj && vrecObj.rec.state !== 'inactive') vrecObj.rec.stop(); }
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let expQ = [], expBusy = false;
 async function expRun() {
@@ -689,12 +759,27 @@ function firstCopyNote() {
   try { if (localStorage.getItem('ancla.copynote')) return; localStorage.setItem('ancla.copynote', '1'); } catch (e) {}
   toast(isIOS ? 'En iPhone, abre la foto y toca Guardar para ponerla en Fotos.' : 'Copia guardada en Descargas; la verás en la galería del teléfono. Si Chrome pregunta, toca Permitir.');
 }
-function exportToDevice(blob, ts) {
-  if (!canAuto || !S.autoCopy) return;
-  if (isIOS) { firstCopyNote(); return; } /* Safari no permite descargas automáticas: se usa el botón Guardar */
-  expQ.push({ blob, name: photoName(ts) }); expRun(); firstCopyNote();
+const cap = window.Capacitor, isNative = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+async function nativeSave(blob, kind) {
+  /* solo en la app instalada desde tienda/APK (Capacitor): guarda en el álbum «Ancla» de Fotos */
+  try {
+    const Media = cap.Plugins && cap.Plugins.Media; if (!Media) return false;
+    const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+    let al = ((await Media.getAlbums()).albums || []).find(x => x.name === 'Ancla');
+    if (!al) { await Media.createAlbum({ name: 'Ancla' }); al = ((await Media.getAlbums()).albums || []).find(x => x.name === 'Ancla'); }
+    const o = { path: dataUrl, albumIdentifier: al && al.identifier };
+    if (kind === 'video') await Media.saveVideo(o); else await Media.savePhoto(o);
+    return true;
+  } catch (e) { return false; }
+}
+function exportToDevice(blob, ts, kind) {
+  if (isNative) { nativeSave(blob, kind || 'photo'); return; }
+  if (!canAuto || !S.autoCopy || isIOS) return; /* la copia en Descargas es opcional y está apagada por defecto */
+  const ext = kind === 'video' ? (/mp4/.test(blob.type) ? 'mp4' : 'webm') : 'jpg';
+  expQ.push({ blob, name: photoName(ts).replace(/\.jpg$/, '.' + ext) }); expRun(); firstCopyNote();
 }
 async function shareToPhotos(m) {
+  if (m.video) { try { const f = new File([m.video], photoName(m.ts).replace(/\.jpg$/, /mp4/.test(m.video.type) ? '.mp4' : '.webm'), { type: m.video.type }); if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Video de Ancla' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } await saveFile(photoName(m.ts).replace(/\.jpg$/, '.webm'), m.video, m.video.type); return; }
   /* abre el menú del sistema (en iPhone y Android incluye «Guardar imagen» / Fotos) */
   try {
     const f = new File([m.photo], photoName(m.ts), { type: 'image/jpeg' });
@@ -931,7 +1016,7 @@ document.addEventListener('click', async e => {
   if (a === 'vseek') { const au = $('#va'); const r = el.getBoundingClientRect(); if (au && isFinite(au.duration)) au.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * au.duration; return; }
   if (a === 'vphoto') { const v = S.viewer; if (!v || !v.rec) { const au = $('#va'); if (au && !v.panel) { if (au.paused) au.play().catch(() => {}); else au.pause(); } return; } const r = $('.vphoto img').getBoundingClientRect(); v.pins.push({ x: Math.round((e.clientX - r.left) / r.width * 100), y: Math.round((e.clientY - r.top) / r.height * 100), t: Math.round((Date.now() - recT0) / 1000) }); return renderLayer(); }
   if (a === 'vrec') {
-    const v = S.viewer; if (v.rec) { if (mr && mr.state !== 'inactive') mr.stop(); return; }
+    const v = S.viewer; if (S.memos.find(x => x.id === v.id).video) return toast('Los videos ya llevan su propio sonido.'); if (v.rec) { if (mr && mr.state !== 'inactive') mr.stop(); return; }
     const m = S.memos.find(x => x.id === v.id); document.querySelectorAll('audio').forEach(x => x.pause());
     if (m.audio && !v.armed) { v.armed = true; toast('Ya tiene voz. Toca otra vez para reemplazarla.'); setTimeout(() => { if (S.viewer) S.viewer.armed = false; }, 4000); return; }
     v.armed = false; return vRecStart();
@@ -954,12 +1039,19 @@ document.addEventListener('click', async e => {
   if (a === 'open-inbox') { S.menu = false; S.view = 'inbox'; S.anim = true; return render(); }
   if (a === 'dismiss') { S.dismissed[id] = 1; const t = thr(id); if (t && t.remind && t.remind.type === 'date') { t.remind.done = true; await dbPut('threads', t); } return render(); }
   if (a === 'new') return openSheet({ threadId: el.dataset.thread || '' });
-  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); flash(); c.toBlob(async b => { if (S.camRec) { if (S.camRec.photoUrl) URL.revokeObjectURL(S.camRec.photoUrl); S.camRec.photo = b; S.camRec.photoTs = Date.now(); S.camRec.photoUrl = URL.createObjectURL(b); S.camRec.placeP = getPlace(); toast('Foto añadida a tu nota de voz.'); render(); } else { const m = { id: uid(), ts: Date.now(), photo: b, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false }; await persistMemo(m); m.photoUrl = URL.createObjectURL(b); urls.push(m.photoUrl); S.memos.unshift(m); updateThumb(m); updateBg(); exportToDevice(b, m.ts); getPlace().then(pl => { if (pl) { m.place = pl; persistMemo(m); } }); } }, 'image/jpeg', 0.9); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
+  if (a === 'cam-mode') { if (S.vrec) return; S.mode = el.dataset.mode; return render(); }
+  if (a === 'cam-panel') { S.fopen = !S.fopen; S.menu = false; return render(); }
+  if (a === 'cam-filter') { S.filter = el.dataset.f; const v = $('#hcam'); if (v) v.style.filter = filterCss(); document.querySelectorAll('.fchip').forEach(b => { const on = b.dataset.f === S.filter; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); return; }
+  if (a === 'cam-grid') { S.grid = !S.grid; return render(); }
+  if (a === 'cam-torch') { try { const t = homeStream.getVideoTracks()[0]; await t.applyConstraints({ advanced: [{ torch: !S.torch }] }); S.torch = !S.torch; } catch (e) { toast('Este teléfono no deja encender la luz desde aquí.'); } return render(); }
+  if (a === 'cam-zoom') { try { const t = homeStream.getVideoTracks()[0], caps = t.getCapabilities(), zl = [1, 2, 3].filter(z => z <= caps.zoom.max + 0.01); S.zoomI = (S.zoomI + 1) % zl.length; await t.applyConstraints({ advanced: [{ zoom: zl[S.zoomI] }] }); } catch (e) { toast('Este teléfono no deja cambiar el zoom desde aquí.'); } return render(); }
+  if (a === 'cam-shoot' && S.mode === 'video') return S.vrec ? stopVideo() : startVideo();
+  if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; const cx = c.getContext('2d'); try { if (filterCss()) cx.filter = filterCss(); } catch (e) {} cx.drawImage(v, 0, 0); flash(); c.toBlob(async b => { if (S.camRec) { if (S.camRec.photoUrl) URL.revokeObjectURL(S.camRec.photoUrl); S.camRec.photo = b; S.camRec.photoTs = Date.now(); S.camRec.photoUrl = URL.createObjectURL(b); S.camRec.placeP = getPlace(); toast('Foto añadida a tu nota de voz.'); render(); } else { const m = { id: uid(), ts: Date.now(), photo: b, audio: null, dur: 0, pins: [], text: '', threadId: null, private: false }; await persistMemo(m); m.photoUrl = URL.createObjectURL(b); urls.push(m.photoUrl); S.memos.unshift(m); updateThumb(m); updateBg(); exportToDevice(b, m.ts); getPlace().then(pl => { if (pl) { m.place = pl; persistMemo(m); } }); } }, 'image/jpeg', 0.9); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
   if (a === 'cam-voice') { if (S.camRec) { if (mr && mr.state !== 'inactive') mr.stop(); return; } return camRecStart(); }
   if (a === 'cam-rec-cancel') { if (S.camRec) S.camRec.cancel = true; if (mr && mr.state !== 'inactive') mr.stop(); return; }
   if (a === 'menu') { S.menu = !S.menu; return render(); }
   if (a === 'menu-close') { S.menu = false; return render(); }
-  if (a === 'cam-flip') { S.facing = S.facing === 'environment' ? 'user' : 'environment'; return syncHome(); }
+  if (a === 'cam-flip') { S.torch = false; S.zoomI = 0; S.facing = S.facing === 'environment' ? 'user' : 'environment'; return syncHome(); }
   if (a === 'new-photo') return openSheet({}, { autoCam: S.canCam });
   if (a === 'sheet-close') return closeSheet();
   if (a === 'modal-close') return closeModal();
