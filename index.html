@@ -3,27 +3,17 @@
 <title>Ancla</title><meta name="theme-color" content="#6C3BE0"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"><style>:root{padding-top:env(safe-area-inset-top,0px)}
 :root{
-  --bg:#F4F1FF; --surface:#FFFFFF; --ink:#1B1446; --ink2:#3B3763; --muted:#5B5780; --line:#DDD6F3;
-  --brand:#6C3BE0; --on-brand:#FFFFFF; --soft:#E6DFFF; --blue:#2358E6; --blue-soft:#DCE8FF;
-  --yellow:#FFC83D; --on-yellow:#1B1446; --warn:#FFF1C7; --on-warn:#6B4200; --danger:#B3261E; --night:#1B1446; --on-night:#FFFFFF;
+  /* escenario oscuro: la foto es la protagonista; morado, azul y amarillo como acentos */
+  --bg:#0B0722; --surface:#181240; --ink:#FFFFFF; --ink2:#DCD6FA; --muted:#ABA3D8; --line:#2E2663;
+  --brand:#7C4DFF; --on-brand:#FFFFFF; --soft:#2A2266; --blue:#7FA2FF; --blue-soft:#1B2A66;
+  --yellow:#FFC83D; --on-yellow:#1B1446; --warn:#FFC83D; --on-warn:#1B1446; --danger:#FF8A80; --night:#000; --on-night:#FFFFFF;
   --display:'Fraunces',Georgia,serif; --body:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#120D31; --surface:#1D1650; --ink:#F1EEFF; --ink2:#D3CDF3; --muted:#B0A9DA; --line:#372F70;
-    --brand:#A08AFF; --on-brand:#120D31; --soft:#2A2266; --blue:#7FA2FF; --blue-soft:#1F2D66;
-    --warn:#3A2D0B; --on-warn:#FFDE8A; --danger:#FF8A80; --night:#0B0722; --on-night:#FFFFFF; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#120D31; --surface:#1D1650; --ink:#F1EEFF; --ink2:#D3CDF3; --muted:#B0A9DA; --line:#372F70;
-  --brand:#A08AFF; --on-brand:#120D31; --soft:#2A2266; --blue:#7FA2FF; --blue-soft:#1F2D66;
-  --warn:#3A2D0B; --on-warn:#FFDE8A; --danger:#FF8A80; --night:#0B0722; --on-night:#FFFFFF; color-scheme:dark;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%}
 html.easy{font-size:20px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.45;
+body{margin:0;background:radial-gradient(120% 60% at 50% -10%,#2A1670 0%,var(--bg) 60%) fixed,var(--bg);color:var(--ink);font-family:var(--body);line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   padding-block:16px 0;min-height:100%}
 button,input,textarea,select{font:inherit;color:inherit}
@@ -125,6 +115,82 @@ video.cam{width:100%;border-radius:14px;background:#000;max-height:50vh}
 .shutter{width:84px;height:84px;border-radius:50%;border:5px solid #fff;background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
 .shutter span{width:62px;height:62px;border-radius:50%;background:var(--yellow);display:block}
 .shutter:active span{transform:scale(.9)}
+
+html.feedmode,body.feedmode{overflow:hidden}
+.top .brand,.cbrand{letter-spacing:-.5px}
+.card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.card.glass{background:rgba(11,7,34,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card.glow{background:linear-gradient(135deg,#3A1C9E,#7C4DFF);border-color:transparent;box-shadow:0 10px 30px rgba(124,77,255,.35)}
+.card.warn .muted{color:var(--on-warn)}
+.btn.alt{border-color:rgba(255,255,255,.55);color:#fff}
+.chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
+.chip.on{background:var(--yellow);color:var(--on-yellow);border-color:var(--yellow)}
+.chip.blue{background:rgba(127,162,255,.2);color:#BFD0FF;border-color:transparent}
+.state{background:rgba(127,162,255,.22);color:#C7D6FF}
+.state.decidido{background:rgba(255,200,61,.22);color:var(--yellow)}
+.state.cerrado{background:rgba(255,255,255,.14);color:#D9D3F7}
+.back,.link{color:#C9B8FF}
+.link.danger{color:var(--danger)}
+input[type=text],input[type=datetime-local],textarea,select{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff}
+input::placeholder,textarea::placeholder{color:#8F87C4}
+option{color:#1B1446}
+.sheet{background:#120C38;color:#fff;box-shadow:0 -20px 60px rgba(0,0,0,.6);animation:sheetUp .32s cubic-bezier(.2,.8,.2,1) both}
+.layer{background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(34px) scale(.985)}to{opacity:1;transform:none}}
+#app.enter>*{animation:rise .36s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:reduce){#app.enter>*,.sheet{animation:none}}
+.recbtn{box-shadow:0 0 0 10px rgba(255,200,61,.18)}
+/* barra inferior de vidrio con la cámara al centro */
+.nav{background:rgba(11,7,34,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.1);z-index:8}
+.nav button{color:#9A92CC}
+.nav button.on{color:#fff}
+.nav button.on svg{filter:drop-shadow(0 0 8px rgba(124,77,255,.9))}
+.nav .navcam{flex:none;width:62px;height:62px;min-height:0;margin:-18px 6px 0;border-radius:50%;background:var(--yellow);color:var(--on-yellow);border:4px solid var(--bg);box-shadow:0 8px 24px rgba(255,200,61,.35);display:flex;align-items:center;justify-content:center;padding:0}
+.nav .navcam span{display:none}
+/* hilos como portadas */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{position:relative;overflow:hidden;aspect-ratio:3/4;padding:0;border:0;border-radius:20px;background:#181240;color:#fff;display:block;min-height:0}
+.tile .tcov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tshade{position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(11,7,34,.92))}
+.tin{position:absolute;left:0;right:0;bottom:0;padding:12px;display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left}
+.tile .name{font-family:var(--display);font-size:1.15rem;font-weight:700;line-height:1.15}
+.tmeta{font-size:.75rem;font-weight:600;color:#D8D2F5}
+.g0{background:linear-gradient(160deg,#3A1C9E,#7C4DFF)}
+.g1{background:linear-gradient(160deg,#12307A,#2358E6)}
+.g2{background:linear-gradient(160deg,#1B1446,#6C3BE0)}
+.g3{background:linear-gradient(160deg,#2358E6,#6C3BE0)}
+/* feed vertical a pantalla completa */
+.feed{position:fixed;inset:0;z-index:3;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;background:var(--bg)}
+.feed.prox{scroll-snap-type:y proximity}
+.feedtop{position:fixed;z-index:6;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(11,7,34,.75),transparent);pointer-events:none}
+.fcard{position:relative;height:100vh;height:100svh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#0B0722;border:0;border-radius:0;padding:0;display:block}
+.fbgimg{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2)}
+.fphoto{position:absolute;left:50%;top:50%;transform:translate(-50%,-56%);line-height:0;max-width:calc(100% - 24px);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.fphoto>img{max-width:calc(100vw - 96px);max-height:58svh;width:auto;height:auto;display:block}
+.fshade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(transparent 45%,rgba(11,7,34,.92))}
+.fshade.heavy{background:linear-gradient(rgba(11,7,34,.45),rgba(11,7,34,.92))}
+.finfo{position:absolute;left:0;right:78px;bottom:0;padding:0 16px calc(96px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px;z-index:2}
+.fmeta{font-weight:800;font-size:.85rem;color:#C7D6FF}.fmeta::first-letter{text-transform:uppercase}
+.ftxt{font-size:1.08rem;line-height:1.4;text-shadow:0 1px 8px rgba(0,0,0,.6);overflow-wrap:anywhere;white-space:pre-wrap}
+.ftxt.dim{color:#CFC8F4}
+.fcard.nophoto .ftxt{font-family:var(--display);font-size:1.6rem;line-height:1.25;font-weight:600}
+.fcard.nophoto .finfo{top:96px;justify-content:center;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.fside{position:absolute;z-index:3;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(104px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;align-items:center}
+.fplayer{display:flex;align-items:center;gap:10px;background:rgba(11,7,34,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:999px;padding:6px 14px 6px 6px}
+.fplay{width:52px;height:52px;border-radius:50%;border:0;background:var(--yellow);color:var(--on-yellow);display:flex;align-items:center;justify-content:center;flex:none;padding:0}
+.fplay .ipause{display:none}.fplayer.playing .iplay{display:none}.fplayer.playing .ipause{display:inline-flex}
+.fplayer .fbar{flex:1;min-width:30px;height:28px;display:flex;align-items:center;cursor:pointer;position:relative}
+.fbar::before{content:"";position:absolute;left:0;right:0;height:5px;border-radius:3px;background:rgba(255,255,255,.28)}
+.ffill{position:relative;height:5px;border-radius:3px;background:var(--yellow);width:0}
+.fplayer .dur{font-size:.78rem;color:#fff;white-space:nowrap}
+.pin{z-index:2;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.fhead{position:relative;min-height:100vh;min-height:100svh;scroll-snap-align:start;overflow:hidden;background:#0B0722}
+.fhin{position:relative;z-index:2;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(110px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto}
+.swipe{text-align:center;font-weight:700;font-size:.85rem;color:#C9B8FF;padding-top:6px}
+.top .brand,.top h1{color:#fff}
+.brand{color:#fff}
+.nav-in{align-items:center}
 </style></head><body><div id="app"></div><div id="layer"></div><div id="toast" class="toast" role="status" aria-live="polite" hidden></div><script>
 (() => {
 'use strict';
@@ -149,6 +215,10 @@ const IC = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  play: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  pause: '<path d="M8 5v14M16 5v14" stroke-width="3.5"/>',
+  pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
   flip: '<path d="M4 8h12l-3-3M20 16H8l3 3"/>',
   img: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 18l5-5 4 4 2-2 3 3"/>'
 };
@@ -201,8 +271,9 @@ function setHash(h) { try { if (h) { if (location.hash !== '#' + h) location.has
 /* ---------- vistas ---------- */
 function nav() {
   const item = (k, i, l) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? 'on' : ''}" aria-current="${S.tab === k ? 'page' : 'false'}">${ic(i)}<span>${l}</span></button>`;
-  return `<nav class="nav" aria-label="Principal"><div class="nav-in">${item('cam', 'cam', 'Cámara')}${item('home', 'home', 'Hilos')}${item('time', 'clock', 'Cronología')}${item('search', 'search', 'Buscar')}${item('more', 'more', 'Más')}</div></nav>`;
+  return `<nav class="nav" aria-label="Principal"><div class="nav-in">${item('home', 'home', 'Hilos')}${item('time', 'clock', 'Cronología')}<button class="navcam" data-act="tab" data-tab="cam" aria-label="Abrir la cámara">${ic('cam', 30)}</button>${item('search', 'search', 'Buscar')}${item('more', 'more', 'Más')}</div></nav>`;
 }
+const grad = id => 'g' + ([...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0) % 4);
 function view() {
   let h;
   if (S.view === 'home' && S.tab === 'cam') return camView();
@@ -254,15 +325,15 @@ function banners() {
   return out.join('');
 }
 function threadItem(t) {
-  const n = memosOf(t.id).length, la = lastActivity(t);
-  return `<button class="thread" data-act="open-thread" data-id="${t.id}"><div class="row sp"><span class="name">${esc(t.name)}</span><span class="state ${t.state}">${t.state}</span></div><span class="muted">${n} ${n === 1 ? 'recuerdo' : 'recuerdos'} · último movimiento ${fmtDate(la)}${t.remind && !t.remind.done ? ' · con recordatorio' : ''}</span></button>`;
+  const n = memosOf(t.id).length, la = lastActivity(t), cov = memosOf(t.id).find(x => x.photoUrl);
+  return `<button class="thread tile ${cov ? '' : grad(t.id)}" data-act="open-thread" data-id="${t.id}">${cov ? `<img class="tcov" src="${cov.photoUrl}" alt="">` : ''}<span class="tshade"></span><span class="tin"><span class="state ${t.state}">${t.state}</span><span class="name">${esc(t.name)}</span><span class="tmeta">${n} ${n === 1 ? 'recuerdo' : 'recuerdos'} · ${fmtDate(la)}${t.remind && !t.remind.done ? ' · recordatorio' : ''}</span></span></button>`;
 }
 function homeView() {
   const inbox = S.memos.filter(isInbox);
   const active = S.threads.filter(t => t.state !== 'cerrado').sort((a, b) => lastActivity(b) - lastActivity(a));
   const closed = S.threads.filter(t => t.state === 'cerrado');
   const stale = active.filter(t => Date.now() - lastActivity(t) > 7 * DAY);
-  let h = `<div class="top"><div class="brand">ancla</div></div>`;
+  let h = `<div class="top"><div class="brand">ancla</div><button class="chip" data-act="tab" data-tab="cam">${ic('cam', 16)}&nbsp;Cámara</button></div>`;
   h += banners();
   if (S.easy) {
     h += `<h1>Hola, ¿qué quieres hacer?</h1><div class="easybtns">
@@ -270,16 +341,15 @@ function homeView() {
       <button class="btn big" data-act="new-photo">${ic('cam', 32)} Tomar una foto</button>
       <button class="btn big" style="background:var(--blue)" data-act="tab" data-tab="search">${ic('search', 32)} Encontrar algo</button></div>`;
   } else {
-    h += `<div class="capture"><button class="btn yellow big" data-act="new">${ic('mic', 28)} Nuevo recuerdo con voz</button><button class="btn alt" data-act="new-photo">${ic('cam')} Tomar una foto</button></div>`;
+    h += `<h1>Tus hilos</h1>`;
   }
-  if (inbox.length) h += `<button class="thread" data-act="open-inbox"><div class="row sp"><span class="name">Sin motivo</span><span class="state">${inbox.length}</span></div><span class="muted">Fotos guardadas sin nota. Cuando quieras, cuenta por qué las guardaste.</span></button>`;
   if (stale.length) {
     const t = stale[stale.length - 1], d = Math.floor((Date.now() - lastActivity(t)) / DAY);
-    h += `<div class="card"><div class="eyebrow">Para retomar</div><h3>${esc(t.name)}</h3><p class="muted">Hace ${d} días que no lo tocas.</p><button class="btn" data-act="open-thread" data-id="${t.id}">¿Dónde quedé?</button></div>`;
+    h += `<div class="card glow"><div class="eyebrow">Para retomar</div><h3>${esc(t.name)}</h3><p class="muted">Hace ${d} días que no lo tocas.</p><button class="btn" data-act="open-thread" data-id="${t.id}">¿Dónde quedé?</button></div>`;
   }
-  if (active.length) h += `<h2>Tus hilos</h2>` + active.map(threadItem).join('');
-  if (!S.threads.length && !S.memos.length) h += `<div class="card empty"><h2>Guarda el porqué de tus fotos</h2><p class="muted">Toca el botón amarillo, habla todo el tiempo que necesites y asígnalo a un hilo. Ancla lo guarda en tu teléfono.</p><button class="btn alt" data-act="sample">Cargar un ejemplo para probar</button></div>`;
-  if (closed.length && !S.easy) h += `<h2>Cerrados</h2>` + closed.map(threadItem).join('');
+  const tiles = (inbox.length ? [`<button class="thread tile g3" data-act="open-inbox"><span class="tshade"></span><span class="tin"><span class="state">${inbox.length}</span><span class="name">Sin motivo</span><span class="tmeta">Fotos esperando tu voz</span></span></button>`] : []).concat(active.map(threadItem), closed.map(threadItem));
+  if (tiles.length) h += `<div class="tiles">${tiles.join('')}</div>`;
+  if (!S.threads.length && !S.memos.length) h += `<div class="card empty"><h2>Guarda el porqué de tus fotos</h2><p class="muted">Toca la cámara, habla todo el tiempo que necesites y asígnalo a un hilo. Ancla lo guarda en tu teléfono.</p><button class="btn yellow" data-act="tab" data-tab="cam">Abrir la cámara</button><button class="btn alt" data-act="sample">Cargar un ejemplo para probar</button></div>`;
   return h;
 }
 function inboxView() {
@@ -298,33 +368,44 @@ function memoCard(m, showThread) {
   ${isInbox(m) ? `<p class="muted">Sin motivo todavía.</p>` : ''}
   <div class="row"><button class="link" data-act="edit-memo" data-id="${m.id}">${isInbox(m) ? 'Contar por qué' : 'Editar'}</button><button class="link danger" data-act="del-memo" data-id="${m.id}">Borrar</button></div></article>`;
 }
+function memoFeed(m, showThread, label) {
+  const t = m.threadId && thr(m.threadId);
+  const pins = (m.pins || []).map((p, i) => `<button class="pin" style="left:${p.x}%;top:${p.y}%" data-act="pin" data-t="${p.t}" data-id="${m.id}" aria-label="Escuchar desde ${fmtDur(p.t)}">${i + 1}</button>`).join('');
+  const media = m.photoUrl ? `<img class="fbgimg" src="${m.photoUrl}" alt=""><div class="fphoto" data-act="play" data-id="${m.id}"><img src="${m.photoUrl}" alt="Foto guardada">${pins}</div>` : '';
+  return `<article class="memo fcard ${m.photoUrl ? '' : 'nophoto ' + grad(m.id)}" id="m-${m.id}">${media}<div class="fshade"></div>
+  <div class="finfo"><div class="row">${showThread && t ? `<button class="chip blue" data-act="open-thread" data-id="${t.id}">${esc(t.name)}</button>` : ''}${m.private ? `<span class="tag">${ic('lock', 14)} Privada</span>` : ''}</div>
+  <div class="fmeta">${esc(label || fmtDay(m.ts))} · ${fmtTime(m.ts)}</div>
+  ${m.text ? `<p class="ftxt">${esc(m.text)}</p>` : ''}${isInbox(m) ? `<p class="ftxt dim">Sin motivo todavía. Toca «Contar» y habla.</p>` : ''}
+  ${m.audioUrl ? `<div class="fplayer"><button class="fplay" data-act="play" data-id="${m.id}" aria-label="Reproducir o pausar la nota de voz"><span class="iplay">${ic('play', 26)}</span><span class="ipause">${ic('pause', 26)}</span></button><div class="fbar" data-act="seek" data-id="${m.id}"><div class="ffill"></div></div><span class="dur"><span class="ft">0:00</span> / ${fmtDur(m.dur)}</span><audio id="a-${m.id}" preload="metadata" src="${m.audioUrl}"></audio></div>` : ''}</div>
+  <div class="fside"><button class="cbtn" data-act="edit-memo" data-id="${m.id}"><span class="cc">${ic('pen', 22)}</span><span class="cl">${isInbox(m) ? 'Contar' : 'Editar'}</span></button><button class="cbtn" data-act="del-memo" data-id="${m.id}"><span class="cc">${ic('trash', 22)}</span><span class="cl">Borrar</span></button></div></article>`;
+}
 function timeView() {
-  const list = S.memos.filter(m => !m.private || true);
-  let h = `<div class="top"><div class="brand">Cronología</div></div><p class="muted">Todo lo que guardaste, en el orden en que ocurrió, con su voz.</p>`;
-  if (!list.length) return h + `<div class="card empty"><p class="muted">Aún no hay recuerdos.</p><button class="btn" data-act="new">Crear el primero</button></div>`;
-  let day = '';
-  list.forEach(m => { const k = new Date(m.ts).toDateString(); if (k !== day) { day = k; h += `<div class="group">${esc(fmtDay(m.ts))}</div>`; } h += memoCard(m, true); });
-  return h;
+  const list = S.memos;
+  if (!list.length) return `<div class="top"><div class="brand">Cronología</div></div><div class="card empty"><p class="muted">Aún no hay recuerdos.</p><button class="btn yellow" data-act="tab" data-tab="cam">Abrir la cámara</button></div>`;
+  return `<div class="feed" id="feed"><div class="feedtop"><span class="cbrand">Cronología</span><span class="camhint">${list.length} ${list.length === 1 ? 'recuerdo' : 'recuerdos'}</span></div>${list.map(m => memoFeed(m, true)).join('')}</div>`;
 }
 function threadView() {
   const t = thr(S.threadId); if (!t) { S.view = 'home'; return homeView(); }
   const ms = memosOf(t.id), ds = (t.decisions || []).slice().sort((a, b) => b.ts - a.ts);
-  const lastTxt = ms.find(m => m.text), lastAud = ms.find(m => m.audio);
+  const lastTxt = ms.find(m => m.text), lastAud = ms.find(m => m.audio), cov = ms.find(m => m.photoUrl);
   const days = Math.floor((Date.now() - lastActivity(t)) / DAY);
-  let h = `<div class="top"><button class="back" data-act="home">${ic('back')} Inicio</button><button class="link" data-act="edit-thread">Editar hilo</button></div>
-  <div class="row sp"><h1>${esc(t.name)}</h1></div><div class="row"><span class="state ${t.state}">${t.state}</span><span class="muted">${ms.length} ${ms.length === 1 ? 'recuerdo' : 'recuerdos'}</span></div>`;
+  let h = `<div class="feed prox"><section class="fhead ${cov ? '' : grad(t.id)}">${cov ? `<img class="fbgimg" src="${cov.photoUrl}" alt="">` : ''}<div class="fshade heavy"></div><div class="fhin">
+  <div class="top"><button class="back" data-act="home">${ic('back')} Hilos</button><button class="link" data-act="edit-thread">Editar hilo</button></div>
+  <h1>${esc(t.name)}</h1><div class="row"><span class="state ${t.state}">${t.state}</span><span class="muted">${ms.length} ${ms.length === 1 ? 'recuerdo' : 'recuerdos'}</span></div>`;
   h += banners();
-  h += `<div class="card"><div class="eyebrow">¿Dónde quedé?</div>
+  h += `<div class="card glass"><div class="eyebrow">¿Dónde quedé?</div>
     <p>${days > 0 ? `Hace ${days} ${days === 1 ? 'día' : 'días'} del último movimiento.` : 'Hoy hubo movimiento.'}</p>
     ${lastTxt ? `<p>Tu última nota: «${esc(lastTxt.text.slice(0, 200))}»</p>` : lastAud ? `<p>Tu última nota es de voz (${fmtDur(lastAud.dur)}), del ${fmtDate(lastAud.ts)}.</p>` : '<p class="muted">Aún no hay notas.</p>'}
     <p>${t.state === 'cerrado' ? 'Hilo cerrado.' : ds.length ? `Última decisión: ${esc(ds[0].text)}` : 'Todavía no hay una decisión.'}</p>
     ${t.next ? `<p><b>Siguiente paso:</b> ${esc(t.next)}</p>` : ''}</div>`;
-  h += `<div class="row"><button class="btn" data-act="new" data-thread="${t.id}">${ic('mic')} Añadir recuerdo</button><button class="btn alt" data-act="decision">Registrar decisión</button></div>
+  h += `<div class="row"><button class="btn yellow" data-act="new" data-thread="${t.id}">${ic('mic')} Añadir recuerdo</button><button class="btn alt" data-act="decision">Registrar decisión</button></div>
   <div class="row"><button class="chip" data-act="remind">${t.remind && !t.remind.done ? 'Cambiar recordatorio' : 'Recordatorio'}</button><button class="chip" data-act="summary">Resumen</button>${t.state !== 'cerrado' ? `<button class="chip" data-act="close-thread">Cerrar hilo</button>` : ''}</div>`;
-  if (t.closure) h += `<div class="card"><div class="eyebrow">Cierre · ${fmtDate(t.closure.ts)}</div><p><b>Resultado.</b> ${esc(t.closure.result)}</p>${t.closure.learn ? `<p><b>Aprendizajes.</b> ${esc(t.closure.learn)}</p>` : ''}</div>`;
-  if (ds.length) h += `<h2>Decisiones</h2>` + ds.map(d => `<div class="card"><div class="eyebrow">${fmtDate(d.ts)}</div><p><b>${esc(d.text)}</b></p>${d.why ? `<p class="muted">Motivo: ${esc(d.why)}</p>` : ''}</div>`).join('');
-  h += `<h2>Línea de tiempo</h2>` + (ms.length ? ms.map(m => memoCard(m, false)).join('') : '<p class="muted">Añade la primera foto o nota de voz.</p>');
-  return h;
+  if (t.closure) h += `<div class="card glass"><div class="eyebrow">Cierre · ${fmtDate(t.closure.ts)}</div><p><b>Resultado.</b> ${esc(t.closure.result)}</p>${t.closure.learn ? `<p><b>Aprendizajes.</b> ${esc(t.closure.learn)}</p>` : ''}</div>`;
+  if (ds.length) h += `<h2>Decisiones</h2>` + ds.map(d => `<div class="card glass"><div class="eyebrow">${fmtDate(d.ts)}</div><p><b>${esc(d.text)}</b></p>${d.why ? `<p class="muted">Motivo: ${esc(d.why)}</p>` : ''}</div>`).join('');
+  h += ms.length ? `<p class="swipe">Desliza hacia arriba para ver los recuerdos</p>` : '';
+  h += `</div></section>`;
+  h += ms.length ? ms.map(m => memoFeed(m, false)).join('') : `<section class="fcard"><div class="finfo"><p class="ftxt dim">Añade la primera foto o nota de voz.</p></div></section>`;
+  return h + `</div>`;
 }
 function searchView() {
   return `<div class="top"><div class="brand">Buscar</div></div><p class="muted">Pregunta con tus palabras. Ancla busca solo en lo que guardaste.</p>
@@ -580,16 +661,18 @@ function editMemo(m, extraText) {
 }
 function openModal(m) { S.modal = m; setHash('ventana'); renderLayer(); }
 function closeModal() { S.modal = null; setHash(''); renderLayer(); }
-function go(tab) { S.tab = tab; S.view = 'home'; render(); window.scrollTo(0, 0); }
-function openThread(id) { S.threadId = id; S.view = 'thread'; S.tab = 'home'; render(); window.scrollTo(0, 0); }
+function go(tab) { S.tab = tab; S.view = 'home'; S.anim = true; render(); window.scrollTo(0, 0); }
+function openThread(id) { S.threadId = id; S.view = 'thread'; S.tab = 'home'; S.anim = true; render(); window.scrollTo(0, 0); }
 
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
   const a = el.dataset.act, id = el.dataset.id;
   if (a === 'tab') return go(el.dataset.tab);
-  if (a === 'home') { S.view = 'home'; S.tab = 'home'; return render(); }
+  if (a === 'play') { const au = $('#a-' + id); if (au) { if (au.paused) { document.querySelectorAll('audio').forEach(x => { if (x !== au) x.pause(); }); au.play().catch(() => {}); } else au.pause(); } return; }
+  if (a === 'seek') { const au = $('#a-' + id); const r = el.getBoundingClientRect(); if (au && isFinite(au.duration)) au.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * au.duration; return; }
+  if (a === 'home') { S.view = 'home'; S.tab = 'home'; S.anim = true; return render(); }
   if (a === 'open-thread') return openThread(id);
-  if (a === 'open-inbox') { S.view = 'inbox'; return render(); }
+  if (a === 'open-inbox') { S.view = 'inbox'; S.anim = true; return render(); }
   if (a === 'dismiss') { S.dismissed[id] = 1; const t = thr(id); if (t && t.remind && t.remind.type === 'date') { t.remind.done = true; await dbPut('threads', t); } return render(); }
   if (a === 'new') return openSheet({ threadId: el.dataset.thread || '' });
   if (a === 'cam-shoot') { const v = $('#hcam'); if (v && v.videoWidth) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(b => { openSheet({}); setPhoto(b); renderLayer(); }, 'image/jpeg', 0.88); } else toast('La cámara aún no está lista. Usa «Tomar foto con el teléfono».'); return; }
@@ -615,7 +698,7 @@ document.addEventListener('click', async e => {
   if (a === 'pin') { const au = $('#a-' + id); if (au) { au.currentTime = Number(el.dataset.t) || 0; au.play().catch(() => {}); } return; }
   if (a === 'edit-memo') return editMemo(S.memos.find(m => m.id === id));
   if (a === 'del-memo') {
-    if (!el.dataset.armed) { el.dataset.armed = '1'; el.textContent = '¿Seguro? Toca otra vez'; setTimeout(() => { el.dataset.armed = ''; el.textContent = 'Borrar'; }, 4000); return; }
+    if (!el.dataset.armed) { const lab = el.querySelector('.cl') || el; el.dataset.armed = '1'; lab.textContent = '¿Seguro?'; setTimeout(() => { el.dataset.armed = ''; lab.textContent = 'Borrar'; }, 4000); return; }
     await dbDel('memos', id); await reload(); return toast('Recuerdo borrado.');
   }
   if (a === 'dictate') return dictate(t => { S.q = t; const q = $('#q'); if (q) { q.value = t; $('#results').innerHTML = results(t); } });
@@ -680,6 +763,11 @@ document.addEventListener('submit', async e => {
   }
   await dbPut('threads', t); S.modal = null; setHash(''); await reload(); toast('Guardado.');
 });
+['play', 'pause', 'ended', 'timeupdate'].forEach(ev => document.addEventListener(ev, e => {
+  const a = e.target; if (!a || a.tagName !== 'AUDIO') return; const pl = a.closest && a.closest('.fplayer'); if (!pl) return;
+  if (ev === 'timeupdate' && isFinite(a.duration) && a.duration > 0) { pl.querySelector('.ffill').style.width = (a.currentTime / a.duration * 100) + '%'; pl.querySelector('.ft').textContent = fmtDur(a.currentTime); }
+  pl.classList.toggle('playing', !a.paused && !a.ended);
+}, true));
 document.addEventListener('loadedmetadata', e => {
   const a = e.target; if (a.tagName !== 'AUDIO' || a.duration !== Infinity) return;
   a.currentTime = 1e101; a.addEventListener('timeupdate', function f() { a.removeEventListener('timeupdate', f); a.currentTime = 0; });
@@ -689,7 +777,8 @@ document.addEventListener('visibilitychange', () => { syncHome(); if (!document.
 
 function render() {
   document.documentElement.classList.toggle('easy', S.easy);
-  $('#app').innerHTML = view();
+  const app = $('#app'); app.innerHTML = view(); app.classList.remove('enter'); if (S.anim) { void app.offsetWidth; app.classList.add('enter'); S.anim = false; }
+  const fm = !!document.querySelector('.feed, .camscreen'); document.documentElement.classList.toggle('feedmode', fm); document.body.classList.toggle('feedmode', fm);
   if (S.tab === 'more') { try { navigator.storage.estimate().then(e => { const el = $('#storageinfo'); if (el) el.textContent = 'Usado: ' + (e.usage / 1048576).toFixed(1) + ' MB de ' + Math.round(e.quota / 1048576) + ' MB disponibles.'; }); } catch (x) {} }
   renderLayer();
   syncHome();
