@@ -1,48 +1,21 @@
-ANCLA - app web instalable (PWA) para Android, lista para iPhone
-=================================================================
-Como ponerla en tu telefono
-1. Sube los archivos de esta carpeta (sin la carpeta misma) a un hosting con HTTPS: GitHub Pages, Netlify, Cloudflare Pages o Firebase Hosting (todos con plan gratis).
-2. Abre la direccion en Chrome para Android. Menu (tres puntos) > "Instalar app" o "Agregar a la pantalla principal".
-3. Al instalarla, Ancla aparece en el boton Compartir de la galeria y de las capturas de Android.
-4. Primera vez: acepta los permisos de camara y microfono.
+ANCLA (Flutter) - version 0.1
 
-Que hace
-- Abre directo en la camara, con iconos propios (voz, hilos, cronologia, buscar, mas). Se puede desactivar en Mas.
-- Foto con la camara de Ancla o del album, nota de voz sin limite de tiempo, pines de voz sobre la foto.
-- Hilos con linea de tiempo, decisiones, "Donde quede?", cierre con aprendizajes.
-- Bandeja "Sin motivo", cronologia, busqueda escrita o hablada, resumen descargable, modo facil.
-- Recordatorio por fecha o por lugar (se muestra al abrir Ancla).
-- Todo se guarda en el telefono. Funciona sin internet.
+QUE ES
+App de camara: cada foto puede llevar una nota de VOZ (sin limite de duracion) y/o texto.
+- Foto a pantalla completa con solo: grabar voz, reproducir, borrar (sin preguntar) e info (fecha, hora, lugar).
+- "Foto + voz": al disparar se abre la foto y empieza a grabar.
+- Cada foto se guarda en la app y en el album "Ancla" de la galeria del telefono.
+- Hilos: agrupa fotos de un proyecto y cierralo con una decision.
 
-Todavia no incluye (necesita servidor)
-- Nube, invitar por enlace, notificaciones con la app cerrada, suscripcion Plus, transcripcion automatica de audios.
+COMO OBTENER EL APK (sin instalar nada)
+1. Crea un repositorio nuevo en GitHub (boton verde "New").
+2. Sube TODO el contenido de esta carpeta (arrastrar y soltar en "uploading an existing file").
+   Importante: tambien la carpeta oculta .github (si no se ve, usa "Upload files" y arrastra la carpeta completa).
+3. Ve a la pestaña "Actions" > "Compilar APK de Ancla" > "Run workflow".
+4. Espera unos 5-8 minutos. Al terminar, entra a la ejecucion y descarga "Ancla-APK" (abajo, en Artifacts).
+5. Descomprime el zip, pasa app-release.apk al telefono Android e instalalo
+   (permite "instalar apps de origen desconocido" cuando te lo pida).
 
-Si ya habias instalado una version anterior: abre Ancla con internet una vez y cierrala por completo para que se actualice.
-
-NOVEDAD: FOTO RAPIDA Y GALERIA
-- Al tocar el boton de foto, la foto aparece como miniatura (abajo a la izquierda) y la camara sigue lista para la siguiente.
-- Toca la miniatura: la foto se abre a pantalla completa con el boton grande de voz. Al terminar de grabar, la voz queda anclada en la foto.
-- Pestana "Galeria": todas las fotos, con o sin voz, por dia, de la mas nueva a la mas vieja. Es tu copia dentro de Ancla.
-- Copia en el telefono: cada foto tambien se descarga como Ancla_AAAAMMDD_HHMMSS.jpg (carpeta Descargas). Se puede apagar en "Mas". Chrome puede pedirte permiso para descargas multiples: acepta.
-- Una carpeta propia "Ancla" dentro de Fotos solo es posible con la app nativa (Flutter), planeada despues.
-
-MEJORAS DE GUARDADO
-- Boton "Guardar" en cada foto: abre el menu del telefono para guardarla en Fotos (en iPhone es la forma de tenerla en Fotos).
-- Las copias automaticas se hacen en fila, con una pausa entre cada una, para que Chrome no las bloquee.
-- La primera vez, Ancla te avisa donde quedo tu copia.
-
-VISOR DE FOTO (NUEVO)
-- La foto se ve a pantalla completa con los iconos encima. Solo hay dos acciones: grabar voz (boton amarillo grande) y borrar.
-- Borrar es inmediato, sin preguntar, y te lleva de vuelta a la camara. Una foto borrada no se puede recuperar.
-- Si grabas voz y tomas la foto desde la camara, al terminar se abre la foto a pantalla completa con el icono de voz para reproducirla ahi mismo.
-- Boton "i" (arriba a la derecha): fecha, hora y lugar de la foto. Ahi tambien estan Nota, Hilo y Guardar en Fotos.
-- El lugar se guarda con las coordenadas y un enlace para verlo en el mapa. Se puede apagar en Mas ("Guardar el lugar de cada foto"). El telefono te pedira permiso de ubicacion la primera vez.
-
-CAMARA PROFESIONAL (NUEVO)
-- Boton de ajustes (arriba): 8 filtros en vivo (Natural, Calido, Frio, Vivido, Mate, B/N, Sepia, Dramatico), cuadricula y, si tu telefono lo permite, luz y zoom 1x/2x/3x.
-- El filtro se ve en la camara y queda aplicado en la foto y en el video.
-- FOTO / VIDEO (abajo): en modo video, toca el boton rojo para empezar y otra vez para parar. Los videos llevan su propio sonido, aparecen en la Galeria (filtro "Videos") y se ven a pantalla completa.
-- Ya NO se guarda nada en Descargas por defecto (se puede activar en Mas). Para mandar una foto o video a Fotos usa Guardar, en los datos (i).
-
-GUARDADO AUTOMATICO EN FOTOS
-- Una pagina web no puede pedir permiso para escribir en tu album de Fotos. Eso solo lo hace una app instalada (APK/tienda). El codigo ya esta preparado para guardar en un album "Ancla" cuando se empaquete como app (Capacitor); falta generar y probar ese paquete.
+ESTADO
+Codigo escrito pero NO compilado todavia (no habia Flutter en mi entorno). Si la compilacion falla,
+copia el error rojo de Actions y lo corrijo.
